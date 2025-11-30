@@ -95,12 +95,21 @@ class ApiService {
     }
 
     // Simulations endpoints
-    async getUserSimulations(userId: string, options?: {
-        limit?: number;
-        offset?: number;
-        orderBy?: string;
-    }) {
-        return this.api.get(`/simulations/user/${userId}`, { params: options });
+    async getUserSimulations(
+        userId: string,
+        options?: {
+            limit?: number;
+            offset?: number;
+            orderBy?: 'recent' | 'oldest';
+        },
+    ) {
+        const params = {
+            limit: options?.limit,
+            offset: options?.offset ?? 0,
+            orderBy: options?.orderBy ?? 'recent',
+        };
+
+        return this.api.get(`/simulations/user/${userId}`, { params });
     }
 
     async getSimulation(id: string) {
