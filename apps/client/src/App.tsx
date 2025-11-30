@@ -5,8 +5,6 @@ import { useAuth } from '@/hooks/useAuth';
 
 // Pages
 import Home from '@/pages/Home';
-import Login from '@/pages/Login';
-import Register from '@/pages/Register';
 import Strategies from '@/pages/Strategies';
 import StrategyDetail from '@/pages/StrategyDetail';
 import Dashboard from '@/pages/Dashboard';
@@ -37,12 +35,11 @@ function App() {
         <QueryClientProvider client={queryClient}>
             <Router>
                 <Routes>
-                    {/* Public routes */}
+                    {/* Rotas públicas */}
                     <Route path="/" element={<Home />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
+                    <Route path="/home" element={<Navigate to="/" replace />} />
 
-                    {/* Protected routes */}
+                    {/* Rotas protegidas */}
                     <Route
                         path="/strategies"
                         element={
