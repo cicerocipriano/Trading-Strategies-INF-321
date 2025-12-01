@@ -37,7 +37,7 @@ export function SuggestedStrategiesCard({
                 : 'Risco alto';
 
     return (
-        <div className="bg-card border border-border rounded-xl p-5 space-y-4">
+        <div className="ts-glass-surface ts-glass-hover-lift rounded-xl p-5 space-y-4">
             <div>
                 <h2 className="text-lg font-semibold flex items-center gap-2">
                     <LineChart className="w-4 h-4" />

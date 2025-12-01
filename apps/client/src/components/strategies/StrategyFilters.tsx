@@ -27,16 +27,10 @@ export function StrategiesFilters({
 }: StrategiesFiltersProps) {
     return (
         <div className="
+                ts-glass-surface ts-glass-hover-soft
                 rounded-2xl
-                border border-white/15
-                bg-white/8
                 p-6
-                shadow-lg
-                backdrop-blur-xl
                 space-y-5
-                transition-all duration-200
-                hover:bg-white/14
-                hover:border-white/20
             ">
             <div className="flex items-center justify-between flex-wrap gap-3">
                 <div className="flex items-center gap-2">

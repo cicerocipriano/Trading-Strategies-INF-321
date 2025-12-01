@@ -74,7 +74,7 @@ function Dashboard() {
 
             <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
 
-                <div className="bg-card border border-border rounded-xl p-4 flex flex-col justify-between">
+                <div className="ts-glass-surface ts-glass-hover-lift rounded-xl p-4 flex flex-col justify-between">
                     <div className="flex items-start justify-between">
                         <div>
                             <p className="text-xs font-medium text-muted-foreground">
@@ -94,7 +94,7 @@ function Dashboard() {
                 </div>
 
 
-                <div className="bg-card border border-border rounded-xl p-4 flex flex-col justify-between">
+                <div className="ts-glass-surface ts-glass-hover-lift rounded-xl p-4 flex flex-col justify-between">
                     <div className="flex items-start justify-between">
                         <div>
                             <p className="text-xs font-medium text-muted-foreground">
@@ -113,7 +113,7 @@ function Dashboard() {
                     </div>
                 </div>
 
-                <div className="bg-card border border-border rounded-xl p-4 flex flex-col justify-between">
+                <div className="ts-glass-surface ts-glass-hover-lift rounded-xl p-4 flex flex-col justify-between">
                     <div className="flex items-start justify-between">
                         <div>
                             <p className="text-xs font-medium text-muted-foreground">
@@ -132,7 +132,7 @@ function Dashboard() {
                     </div>
                 </div>
 
-                <div className="bg-card border border-border rounded-xl p-4 flex flex-col justify-between">
+                <div className="ts-glass-surface ts-glass-hover-lift rounded-xl p-4 flex flex-col justify-between">
                     <div className="flex items-start justify-between">
                         <div>
                             <p className="text-xs font-medium text-muted-foreground">
@@ -158,7 +158,7 @@ function Dashboard() {
             </section>
 
             <section className="grid gap-6 lg:grid-cols-2">
-                <div className="bg-card border border-border rounded-xl p-5 space-y-4">
+                <div className="ts-glass-surface ts-glass-hover-lift rounded-xl p-5 space-y-4">
                     <div>
                         <h2 className="text-lg font-semibold flex items-center gap-2">
                             <Activity className="w-4 h-4" />

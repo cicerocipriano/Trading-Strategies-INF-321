@@ -34,17 +34,9 @@ export function StrategyCard({ strategy }: StrategyCardProps) {
 
     return (
         <div className="
+                ts-glass-surface ts-glass-hover-lift
                 rounded-2xl
-                border border-white/15
-                bg-white/8
                 p-6
-                shadow-lg
-                backdrop-blur-xl
-                hover:bg-white/16
-                hover:border-white/25
-                hover:-translate-y-1
-                hover:shadow-2xl
-                transition-all duration-200
                 flex flex-col
             " >
             {/* Título + resumo */}
