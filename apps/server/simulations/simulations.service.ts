@@ -320,11 +320,11 @@ export class SimulationsService {
             }
 
             const returns = simulations.map((s) =>
-                parseFloat(s.returnPercentage?.toString() ?? '0'),
+                Number.parseFloat(s.returnPercentage?.toString() ?? '0'),
             );
 
             const profitableSimulations = simulations.filter((s) => {
-                const totalReturn = parseFloat(s.totalReturn?.toString() ?? '0');
+                const totalReturn = Number.parseFloat(s.totalReturn?.toString() ?? '0');
                 return totalReturn > 0;
             }).length;
 
