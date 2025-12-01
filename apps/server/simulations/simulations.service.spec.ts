@@ -77,11 +77,6 @@ describe('Simulações Testes Service', () => {
     };
 
     beforeEach(async () => {
-        await db.delete(schema.simulationLegs);
-        await db.delete(schema.simulations);
-        await db.delete(schema.strategies);
-        await db.delete(schema.users);
-
         await db.insert(schema.users).values(mockUsuario);
         await db.insert(schema.strategies).values(mockEstrategia);
 
@@ -94,7 +89,9 @@ describe('Simulações Testes Service', () => {
 
     afterEach(async () => {
         await db.delete(schema.simulationLegs).where(eq(schema.simulationLegs.simulationId, simulacaoId));
-        await db.delete(schema.simulations).where(eq(schema.simulations.id, simulacaoId));
+        await db.delete(schema.simulations).where(eq(schema.simulations.userId, usuarioId));
+        await db.delete(schema.users).where(eq(schema.users.id, usuarioId));
+        await db.delete(schema.strategies).where(eq(schema.strategies.id, estrategiaId));
     });
 
     describe('Obter simulações do usuário, getUserSimulations', () => {
@@ -129,8 +126,6 @@ describe('Simulações Testes Service', () => {
             const resultado = await service.getUserSimulations(usuarioId);
 
             expect(resultado[0].createdAt >= resultado[1].createdAt).toBe(true);
-
-            await db.delete(schema.simulations).where(eq(schema.simulations.id, sim2.id));
         });
 
         it('Deve retornar simulações ordenadas por antigas.', async () => {
@@ -147,8 +142,6 @@ describe('Simulações Testes Service', () => {
             const resultado = await service.getUserSimulations(usuarioId, opcoes);
 
             expect(resultado[0].createdAt <= resultado[1].createdAt).toBe(true);
-
-            await db.delete(schema.simulations).where(eq(schema.simulations.id, sim2.id));
         });
 
         it('Deve aplicar limite de paginação.', async () => {
@@ -164,8 +157,6 @@ describe('Simulações Testes Service', () => {
             const resultado = await service.getUserSimulations(usuarioId, opcoes);
 
             expect(resultado.length).toBeLessThanOrEqual(1);
-
-            await db.delete(schema.simulations).where(eq(schema.simulations.id, sim2.id));
         });
 
         it('Deve aplicar offset de paginação.', async () => {
@@ -181,8 +172,6 @@ describe('Simulações Testes Service', () => {
             const resultado = await service.getUserSimulations(usuarioId, opcoes);
 
             expect(resultado.length).toBeLessThanOrEqual(1);
-
-            await db.delete(schema.simulations).where(eq(schema.simulations.id, sim2.id));
         });
     });
 
@@ -234,8 +223,6 @@ describe('Simulações Testes Service', () => {
             expect(resultado).toHaveProperty('simulationName', 'Simulação Bull Call Spread');
             expect(resultado).toHaveProperty('userId', usuarioId);
             expect(resultado).toHaveProperty('strategyId', estrategiaId);
-
-            await db.delete(schema.simulations).where(eq(schema.simulations.id, resultado.id));
         });
 
         it('Deve criar simulação com valores padrão para campos opcionais.', async () => {
@@ -253,8 +240,6 @@ describe('Simulações Testes Service', () => {
 
             expect(resultado).toHaveProperty('id');
             expect(resultado).toHaveProperty('simulationName', 'Simulação Simples');
-
-            await db.delete(schema.simulations).where(eq(schema.simulations.id, resultado.id));
         });
     });
 
@@ -435,10 +420,6 @@ describe('Simulações Testes Service', () => {
 
             expect(Array.isArray(resultado)).toBe(true);
             expect(resultado.length).toBe(2);
-
-            for (const leg of resultado) {
-                await db.delete(schema.simulationLegs).where(eq(schema.simulationLegs.id, leg.id));
-            }
         });
 
         it('Deve retornar array vazio se nenhuma perna for fornecida.', async () => {
@@ -545,8 +526,6 @@ describe('Simulações Testes Service', () => {
             expect(resultado).toHaveProperty('losingSimulations');
             expect(resultado).toHaveProperty('winRate');
             expect(resultado).toHaveProperty('avgReturn');
-
-            await db.delete(schema.simulations).where(eq(schema.simulations.id, sim2.id));
         });
 
         it('Deve retornar zeros se usuário não tem simulações.', async () => {
@@ -580,9 +559,6 @@ describe('Simulações Testes Service', () => {
             const resultado = await service.getUserStatistics(usuarioId);
 
             expect(parseFloat(resultado.winRate)).toBeCloseTo(66.67, 1);
-
-            await db.delete(schema.simulations).where(eq(schema.simulations.id, sim2.id));
-            await db.delete(schema.simulations).where(eq(schema.simulations.id, sim3.id));
         });
     });
 });
