@@ -1,6 +1,6 @@
 // src/utils/strategyRecommender.ts
 
-export type ExperienceLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+export type ExperienceLevel = 'NOVICE' | 'INTERMEDIATE' | 'ADVANCED';
 export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH';
 
 export interface SuggestedStrategy {
@@ -17,7 +17,7 @@ const STRATEGY_RECOMMENDATIONS: SuggestedStrategy[] = [
         name: 'Long Call',
         bias: 'Altista',
         description: 'Compra de uma opção de compra. Expectativa de alta do ativo.',
-        minLevel: 'BEGINNER',
+        minLevel: 'NOVICE',
         risk: 'MEDIUM',
         tags: ['Alta', 'Direcional', 'Risco limitado'],
     },
@@ -25,7 +25,7 @@ const STRATEGY_RECOMMENDATIONS: SuggestedStrategy[] = [
         name: 'Long Put',
         bias: 'Baixista',
         description: 'Compra de uma opção de venda. Expectativa de queda do ativo.',
-        minLevel: 'BEGINNER',
+        minLevel: 'NOVICE',
         risk: 'MEDIUM',
         tags: ['Baixa', 'Direcional', 'Proteção'],
     },
@@ -121,7 +121,7 @@ function parsePercent(value: string | number | undefined | null): number | null 
 
 function getLevelRank(level: ExperienceLevel): number {
     switch (level) {
-        case 'BEGINNER':
+        case 'NOVICE':
             return 1;
         case 'INTERMEDIATE':
             return 2;
@@ -132,7 +132,7 @@ function getLevelRank(level: ExperienceLevel): number {
 
 export function getExperienceLabel(level: ExperienceLevel | undefined): string {
     switch (level) {
-        case 'BEGINNER':
+        case 'NOVICE':
             return 'Iniciante';
         case 'INTERMEDIATE':
             return 'Intermediário';

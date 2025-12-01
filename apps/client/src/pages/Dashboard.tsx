@@ -45,7 +45,7 @@ function Dashboard() {
     const winRate = stats?.winRate ?? '--';
     const avgReturn = stats?.avgReturn ?? '--';
     const simulatedCapital = stats?.simulatedCapital ?? 0;
-    const experienceLevel = (user?.experienceLevel || 'BEGINNER') as ExperienceLevel;
+    const experienceLevel = (user?.experienceLevel || 'NOVICE') as ExperienceLevel;
 
     return (
         <div className="space-y-8">
