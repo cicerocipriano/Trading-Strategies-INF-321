@@ -45,9 +45,7 @@
         --secondary-foreground: 210 40% 98%;
         --ring: 262 83% 60%;
     }
-}
 
-@layer base {
     * {
         border-color: hsl(var(--border));
     }
@@ -57,6 +55,105 @@
         color: hsl(var(--foreground));
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
             "Inter", sans-serif;
+    }
+
+    select {
+        color: hsl(var(--foreground));
+        background-color: hsl(var(--card));
+    }
+}
+
+@layer components {
+
+    /* Botão primário (Simular) */
+    .ts-btn-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.6rem 1.6rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border: 1px solid hsl(259 90% 70%);
+        background-image: linear-gradient(135deg, hsl(262 83% 65%), hsl(225 95% 65%));
+        color: #fff;
+        box-shadow:
+            0 10px 25px rgba(0, 0, 0, 0.4),
+            0 0 0 1px rgba(255, 255, 255, 0.04);
+        cursor: pointer;
+        transition:
+            background-color 150ms ease,
+            box-shadow 150ms ease,
+            transform 120ms ease,
+            border-color 150ms ease,
+            color 150ms ease;
+    }
+
+    .ts-btn-primary:hover {
+        box-shadow:
+            0 14px 30px rgba(0, 0, 0, 0.6),
+            0 0 0 1px rgba(255, 255, 255, 0.06);
+        transform: translateY(-1px);
+    }
+
+    .ts-btn-primary:active {
+        transform: translateY(0);
+        box-shadow:
+            0 6px 15px rgba(0, 0, 0, 0.5),
+            0 0 0 1px rgba(255, 255, 255, 0.03);
+    }
+
+    /* Botão secundário (Ver detalhes) */
+    .ts-btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.6rem 1.6rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(15, 23, 42, 0.85);
+        color: rgba(248, 250, 252, 0.9);
+        box-shadow:
+            0 10px 25px rgba(15, 23, 42, 0.7),
+            0 0 0 1px rgba(255, 255, 255, 0.03);
+        cursor: pointer;
+        transition:
+            background-color 150ms ease,
+            box-shadow 150ms ease,
+            transform 120ms ease,
+            border-color 150ms ease,
+            color 150ms ease;
+    }
+
+    .ts-btn-secondary:hover {
+        background: rgba(15, 23, 42, 0.95);
+        border-color: rgba(255, 255, 255, 0.18);
+        box-shadow:
+            0 14px 30px rgba(15, 23, 42, 0.9),
+            0 0 0 1px rgba(255, 255, 255, 0.05);
+        transform: translateY(-1px);
+    }
+
+    .ts-btn-secondary:active {
+        transform: translateY(0);
+        box-shadow:
+            0 6px 15px rgba(15, 23, 42, 0.7),
+            0 0 0 1px rgba(255, 255, 255, 0.03);
+    }
+}
+
+@layer utilities {
+    .ts-gradient-page {
+        background:
+            radial-gradient(150% 130% at 50% 0%,
+                hsl(250 70% 60% / 0.70) 0%,
+                hsl(250 70% 60% / 0.35) 30%,
+                hsl(250 70% 60% / 0.12) 55%,
+                transparent 80%),
+            hsl(var(--background));
+        background-attachment: fixed;
     }
 }
 
@@ -80,19 +177,4 @@
 
 ::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--muted-foreground));
-}
-
-@layer utilities {
-    .ts-gradient-page {
-        background:
-            radial-gradient(
-                150% 130% at 50% 0%,
-                hsl(250 70% 60% / 0.70) 0%,
-                hsl(250 70% 60% / 0.35) 30%,
-                hsl(250 70% 60% / 0.12) 55%,
-                transparent 80%
-            ),
-            hsl(var(--background));
-        background-attachment: fixed;
-    }
 }
