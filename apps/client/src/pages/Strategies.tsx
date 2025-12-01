@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useStrategies } from '@/hooks/useStrategies';
 
 import {
@@ -29,6 +29,7 @@ export default function Strategies() {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+
     const activeFilters = useMemo(
         () =>
             Object.keys(filters).reduce((acc, key) => {
@@ -48,17 +49,19 @@ export default function Strategies() {
             ...prev,
             [key]: value,
         }));
+        setCurrentPage(1);
     };
 
-    useEffect(() => {
+    const handleSearchChange = (value: string) => {
+        setSearchTerm(value);
         setCurrentPage(1);
-    }, [filters, searchTerm]);
+    };
 
     const filteredStrategies = useMemo(() => {
         if (!searchTerm.trim()) return strategies;
         const term = searchTerm.toLowerCase();
 
-        return strategies.filter((s: any) => {
+        return strategies.filter((s) => {
             const profKey = s.proficiencyLevel ?? '';
             const outlookKey = s.marketOutlook ?? '';
             const volKey = s.volatilityView ?? '';
@@ -113,7 +116,7 @@ export default function Strategies() {
                 filters={filters}
                 onFilterChange={handleFilterChange}
                 searchTerm={searchTerm}
-                onSearchChange={setSearchTerm}
+                onSearchChange={handleSearchChange}
                 showAdvancedFilters={showAdvancedFilters}
                 onToggleAdvancedFilters={() =>
                     setShowAdvancedFilters((prev) => !prev)
@@ -144,7 +147,7 @@ export default function Strategies() {
                     <>
                         {/* Cards */}
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {paginatedStrategies.map((strategy: any) => (
+                            {paginatedStrategies.map((strategy) => (
                                 <StrategyCard key={strategy.id} strategy={strategy} />
                             ))}
                         </div>

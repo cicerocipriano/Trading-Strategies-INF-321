@@ -14,7 +14,7 @@ interface StrategyCardProps {
     strategy: {
         id: string | number;
         name: string;
-        summary: string;
+        summary?: string;
         proficiencyLevel?: string | null;
         marketOutlook?: string | null;
         volatilityView?: string | null;
