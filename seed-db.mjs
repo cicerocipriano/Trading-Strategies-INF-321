@@ -532,7 +532,7 @@ async function seedDatabase() {
                 legsCount++;
             }
         }
-        console.log(`${legsCount} Pernas de Estratégia inseridas.`);
+        console.log(`✓ ${legsCount} Pernas de Estratégia inseridas.`);
         console.log('Banco de dados populado com sucesso!');
     } catch (error) {
         console.error('Erro ao popular banco:', error);
