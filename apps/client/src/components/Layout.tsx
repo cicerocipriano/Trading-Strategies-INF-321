@@ -18,36 +18,40 @@ export default function Layout({ children }: LayoutProps) {
     };
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen ts-gradient-page text-foreground">
             {/* Navigation */}
-            <nav className="border-b border-border bg-card">
+            <nav className="border-b border-border bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/60">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         {/* Logo */}
                         <Link to="/" className="flex items-center space-x-2">
-                            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                                <span className="text-primary-foreground font-bold">TS</span>
+                            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/40">
+                                <span className="text-primary-foreground font-bold">
+                                    TS
+                                </span>
                             </div>
-                            <span className="font-bold text-lg hidden sm:inline">Trading Strategies</span>
+                            <span className="font-bold text-lg hidden sm:inline">
+                                Trading Strategies
+                            </span>
                         </Link>
 
                         {/* Desktop Menu */}
                         <div className="hidden md:flex items-center space-x-8">
                             <Link
                                 to="/strategies"
-                                className="text-foreground hover:text-primary transition-colors"
+                                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
                             >
                                 Estratégias
                             </Link>
                             <Link
                                 to="/simulator"
-                                className="text-foreground hover:text-primary transition-colors"
+                                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
                             >
                                 Simulador
                             </Link>
                             <Link
                                 to="/dashboard"
-                                className="text-foreground hover:text-primary transition-colors"
+                                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
                             >
                                 Dashboard
                             </Link>
@@ -59,14 +63,14 @@ export default function Layout({ children }: LayoutProps) {
                                 <>
                                     <Link
                                         to="/profile"
-                                        className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
+                                        className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-muted/40 hover:bg-muted transition-colors"
                                     >
                                         <User className="w-4 h-4" />
                                         <span className="text-sm">{user.username}</span>
                                     </Link>
                                     <button
                                         onClick={handleLogout}
-                                        className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                                        className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors"
                                     >
                                         <LogOut className="w-4 h-4" />
                                         <span className="text-sm">Sair</span>
@@ -126,7 +130,7 @@ export default function Layout({ children }: LayoutProps) {
                                             handleLogout();
                                             setIsMenuOpen(false);
                                         }}
-                                        className="w-full text-left px-4 py-2 rounded-lg hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                                        className="w-full text-left px-4 py-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors"
                                     >
                                         Sair
                                     </button>

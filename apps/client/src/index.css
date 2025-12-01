@@ -25,25 +25,25 @@
     }
 
     .dark {
-        --background: 0 0% 3.6%;
-        --foreground: 0 0% 98.2%;
-        --card: 0 0% 3.6%;
-        --card-foreground: 0 0% 98.2%;
-        --popover: 0 0% 3.6%;
-        --popover-foreground: 0 0% 98.2%;
-        --muted: 0 0% 14.9%;
-        --muted-foreground: 0 0% 63.9%;
-        --accent: 0 84.2% 60.2%;
-        --accent-foreground: 0 0% 9%;
-        --destructive: 0 62.8% 30.6%;
+        --background: 222.2 84% 4.9%;
+        --foreground: 210 40% 98%;
+        --card: 222.2 47% 11%;
+        --card-foreground: 210 40% 98%;
+        --popover: 222.2 47% 11%;
+        --popover-foreground: 210 40% 98%;
+        --muted: 217.2 32.6% 17.5%;
+        --muted-foreground: 215 20.2% 65.1%;
+        --primary: 262 83% 60%;
+        --primary-foreground: 222.2 84% 4.9%;
+        --accent: 221 83% 53%;
+        --accent-foreground: 210 40% 98%;
+        --destructive: 0 72% 50%;
         --destructive-foreground: 0 0% 98.2%;
-        --border: 0 0% 14.9%;
-        --input: 0 0% 14.9%;
-        --primary: 0 0% 98.2%;
-        --primary-foreground: 0 0% 9%;
-        --secondary: 0 0% 14.9%;
-        --secondary-foreground: 0 0% 98.2%;
-        --ring: 0 0% 83.1%;
+        --border: 217.2 32.6% 17.5%;
+        --input: 217.2 32.6% 17.5%;
+        --secondary: 217.2 32.6% 17.5%;
+        --secondary-foreground: 210 40% 98%;
+        --ring: 262 83% 60%;
     }
 }
 
@@ -55,15 +55,15 @@
     body {
         background-color: hsl(var(--background));
         color: hsl(var(--foreground));
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+            "Inter", sans-serif;
     }
 }
 
-/* Smooth transitions */
 * {
     transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 
-/* Scrollbar styling */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -80,4 +80,19 @@
 
 ::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--muted-foreground));
+}
+
+@layer utilities {
+    .ts-gradient-page {
+        background:
+            radial-gradient(
+                150% 130% at 50% 0%,
+                hsl(250 70% 60% / 0.70) 0%,
+                hsl(250 70% 60% / 0.35) 30%,
+                hsl(250 70% 60% / 0.12) 55%,
+                transparent 80%
+            ),
+            hsl(var(--background));
+        background-attachment: fixed;
+    }
 }
