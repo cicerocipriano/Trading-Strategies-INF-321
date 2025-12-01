@@ -26,7 +26,18 @@ export function StrategiesFilters({
     totalStrategies,
 }: StrategiesFiltersProps) {
     return (
-        <div className="bg-card/60 border border-border/60 backdrop-blur-md rounded-2xl p-6 space-y-5 shadow-sm">
+        <div className="
+                rounded-2xl
+                border border-white/15
+                bg-white/8
+                p-6
+                shadow-lg
+                backdrop-blur-xl
+                space-y-5
+                transition-all duration-200
+                hover:bg-white/14
+                hover:border-white/20
+            ">
             <div className="flex items-center justify-between flex-wrap gap-3">
                 <div className="flex items-center gap-2">
                     <Filter className="w-5 h-5 text-primary" />

@@ -33,9 +33,20 @@ export function StrategyCard({ strategy }: StrategyCardProps) {
     const typeKey = strategy.strategyType ?? '';
 
     return (
-        <div
-            className="bg-card/70 border border-border/70 rounded-2xl p-6 shadow-sm hover:border-primary/70 hover:shadow-lg hover:bg-card/90 transition-all flex flex-col"
-        >
+        <div className="
+                rounded-2xl
+                border border-white/15
+                bg-white/8
+                p-6
+                shadow-lg
+                backdrop-blur-xl
+                hover:bg-white/16
+                hover:border-white/25
+                hover:-translate-y-1
+                hover:shadow-2xl
+                transition-all duration-200
+                flex flex-col
+            " >
             {/* Título + resumo */}
             <div className="flex-1">
                 <h3 className="text-lg font-semibold mb-1">{strategy.name}</h3>
