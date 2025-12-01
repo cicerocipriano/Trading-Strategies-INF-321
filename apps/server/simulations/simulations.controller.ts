@@ -237,7 +237,8 @@ export class SimulationsController {
      *   profitableSimulations: number,
      *   losingSimulations: number,
      *   winRate: string,
-     *   avgReturn: string
+     *   avgReturn: string,
+     *   simulatedCapital: number
      * }
      */
     @Get('user/:userId/statistics')

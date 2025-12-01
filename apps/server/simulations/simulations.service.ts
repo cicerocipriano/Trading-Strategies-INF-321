@@ -301,6 +301,7 @@ export class SimulationsService {
         losingSimulations: number;
         winRate: string;
         avgReturn: string;
+        simulatedCapital: number;
     }> {
         try {
             const simulations = await this.getUserSimulations(userId);
@@ -314,6 +315,7 @@ export class SimulationsService {
                     losingSimulations: 0,
                     winRate: '0.00',
                     avgReturn: '0.00',
+                    simulatedCapital: 0,
                 };
             }
 
@@ -332,6 +334,10 @@ export class SimulationsService {
 
             const avgReturn = (returns.reduce((a, b) => a + b, 0) / totalSimulations).toFixed(2);
 
+            const capital = this.capitalAgregado(simulations);
+
+            const simulatedCapital = capital.totalInitial + capital.totalReturn;
+
             console.log(`[SimulationsService] Estatísticas calculadas para usuário ${userId}`);
 
             return {
@@ -340,10 +346,23 @@ export class SimulationsService {
                 losingSimulations,
                 winRate,
                 avgReturn,
+                simulatedCapital,
             };
         } catch (error) {
             console.error('[SimulationsService] Erro ao calcular estatísticas:', error);
             throw new BadRequestException('Erro ao calcular estatísticas');
         }
+    }
+
+    private capitalAgregado(simulations: { id: string; createdAt: Date; strategyId: string; userId: string; assetSymbol: string; simulationName: string; startDate: Date; endDate: Date; initialCapital: string; totalReturn: string | null; returnPercentage: string | null; maxDrawdown: string | null; }[]) {
+        return simulations.reduce((acumulador, simulacao: any) => {
+            const inicial = parseFloat(simulacao.initialCapital?.toString() ?? '0');
+            const totalReturn = parseFloat(simulacao.totalReturn?.toString() ?? '0');
+            acumulador.totalInitial += inicial;
+            acumulador.totalReturn += totalReturn;
+            return acumulador;
+        },
+            { totalInitial: 0, totalReturn: 0 }
+        );
     }
 }
