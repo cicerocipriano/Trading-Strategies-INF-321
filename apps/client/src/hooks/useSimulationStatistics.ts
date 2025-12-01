@@ -8,6 +8,7 @@ export interface SimulationStatistics {
     losingSimulations: number;
     winRate: string;
     avgReturn: string;
+    simulatedCapital: number;
 }
 
 async function fetchSimulationStatistics(userId: string): Promise<SimulationStatistics> {
@@ -30,6 +31,7 @@ export function useSimulationStatistics() {
                     losingSimulations: 0,
                     winRate: '0%',
                     avgReturn: '0%',
+                    simulatedCapital: 0,
                 });
             }
 
