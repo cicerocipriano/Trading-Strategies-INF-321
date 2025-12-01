@@ -90,8 +90,7 @@ export default function Home() {
         }
     };
 
-    const userDisplayName =
-        (user as any)?.username ?? (user as any)?.email ?? 'trader';
+    const userDisplayName = user?.username ?? user?.email ?? 'trader';
 
     return (
         <div className="min-h-screen bg-linear-to-r from-[#050316] via-[#05020f] to-[#020008] text-slate-100">

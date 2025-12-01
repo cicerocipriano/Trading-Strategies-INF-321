@@ -10,14 +10,24 @@ export interface SimulationSummary {
     returnPercentage: number | null;
 }
 
-// Para o Dashboard
+interface SimulationApiDTO {
+    id: string;
+    simulationName?: string | null;
+    strategyName?: string | null;
+    assetSymbol?: string | null;
+    ticker?: string | null;
+    createdAt: string;
+    returnPercentage?: number | string | null;
+    totalReturn?: number | string | null;
+}
+
 async function fetchRecentSimulations(userId: string): Promise<SimulationSummary[]> {
     const response = await apiService.getUserSimulations(userId, {
         limit: 3,
         orderBy: 'recent',
     });
 
-    const data = response.data as any[];
+    const data = response.data as SimulationApiDTO[];
 
     return data.map((sim) => {
         const rawReturn = sim.returnPercentage ?? sim.totalReturn ?? null;
@@ -44,9 +54,13 @@ async function fetchRecentSimulations(userId: string): Promise<SimulationSummary
     });
 }
 
+type AuthUserWithId = {
+    id: string;
+};
+
 export function useRecentSimulations() {
     const { user } = useAuth();
-    const userId = (user as any)?.id;
+    const userId = (user as AuthUserWithId | null | undefined)?.id;
 
     return useQuery({
         queryKey: ['recent-simulations', userId],
