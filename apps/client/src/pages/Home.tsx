@@ -14,7 +14,7 @@ export default function Home() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [experienceLevel, setExperienceLevel] = useState('BEGINNER');
+    const [experienceLevel, setExperienceLevel] = useState('NOVICE');
     const [isLoading, setIsLoading] = useState(false);
 
     const { user, login, register, logout } = useAuth();
@@ -237,7 +237,7 @@ export default function Home() {
                                                 className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                                                 disabled={isLoading}
                                             >
-                                                <option value="BEGINNER">Iniciante</option>
+                                                <option value="NOVICE">Iniciante</option>
                                                 <option value="INTERMEDIATE">Intermediário</option>
                                                 <option value="ADVANCED">Avançado</option>
                                             </select>
