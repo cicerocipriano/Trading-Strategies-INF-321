@@ -1,17 +1,21 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { StrategyFilters, useStrategies } from '@/hooks/useStrategies';
+import { StrategyFilters, useStrategies, useStrategy } from '@/hooks/useStrategies';
 import * as apiService from '@/services/api';
 
 vi.mock('@/services/api', () => ({
     apiService: {
         getStrategies: vi.fn(),
+        getStrategy: vi.fn(),
     },
 }));
 
 type ApiServiceType = typeof apiService.apiService;
 type GetStrategiesReturn = ReturnType<ApiServiceType['getStrategies']>;
 type GetStrategiesResolved = Awaited<GetStrategiesReturn>;
+
+type GetStrategyReturn = ReturnType<ApiServiceType['getStrategy']>;
+type GetStrategyResolved = Awaited<GetStrategyReturn>;
 
 describe('useStrategies', () => {
     const estrategiasMock = [
@@ -43,32 +47,31 @@ describe('useStrategies', () => {
 
             const filtrosPadrao: StrategyFilters = {};
 
-            const { result: resultado } = renderHook(() =>
-                useStrategies(filtrosPadrao)
-            );
+            const { result } = renderHook(() => useStrategies(filtrosPadrao));
 
             await waitFor(() => {
-                expect(resultado.current.loading).toBe(false);
+                expect(result.current.loading).toBe(false);
             });
 
-            expect(resultado.current.strategies).toEqual(estrategiasMock);
-            expect(resultado.current.error).toBeNull();
+            expect(result.current.strategies).toEqual(estrategiasMock);
+            expect(result.current.error).toBeNull();
         });
 
-        it('deve tratar erro ao buscar estratégias', async () => {
+        it('deve tratar erro não Axios ao buscar estratégias com mensagem genérica', async () => {
             const mensagemErro = 'Falha ao buscar estratégias da turnê "Ten"';
             vi.mocked(apiService.apiService.getStrategies).mockRejectedValueOnce(
                 new Error(mensagemErro)
             );
 
-            const { result: resultado } = renderHook(() => useStrategies());
+            const { result } = renderHook(() => useStrategies());
 
             await waitFor(() => {
-                expect(resultado.current.loading).toBe(false);
+                expect(result.current.loading).toBe(false);
             });
 
-            expect(resultado.current.error).toBeDefined();
-            expect(resultado.current.strategies).toEqual([]);
+            // aqui garantimos explicitamente a mensagem do hook
+            expect(result.current.error).toBe('Erro ao buscar estratégias');
+            expect(result.current.strategies).toEqual([]);
         });
 
         it('deve controlar corretamente o estado de carregamento', async () => {
@@ -78,17 +81,18 @@ describe('useStrategies', () => {
                 } as unknown as GetStrategiesResolved
             );
 
-            const { result: resultado } = renderHook(() => useStrategies());
+            const { result } = renderHook(() => useStrategies());
 
-            expect(resultado.current.loading).toBe(true);
+            // imediatamente após montagem
+            expect(result.current.loading).toBe(true);
 
             await waitFor(() => {
-                expect(resultado.current.loading).toBe(false);
+                expect(result.current.loading).toBe(false);
             });
         });
     });
 
-    describe('Filtragem', () => {
+    describe('Filtragem (lado do consumidor)', () => {
         it('deve filtrar estratégias por nível de proficiência', async () => {
             vi.mocked(apiService.apiService.getStrategies).mockResolvedValueOnce(
                 {
@@ -96,16 +100,15 @@ describe('useStrategies', () => {
                 } as unknown as GetStrategiesResolved
             );
 
-            const { result: resultado } = renderHook(() => useStrategies());
+            const { result } = renderHook(() => useStrategies());
 
             await waitFor(() => {
-                expect(resultado.current.loading).toBe(false);
+                expect(result.current.loading).toBe(false);
             });
 
             const estrategiasFiltradasPorNivel =
-                resultado.current.strategies.filter(
-                    (estrategia) =>
-                        estrategia.proficiencyLevel === 'intermediario'
+                result.current.strategies.filter(
+                    (estrategia) => estrategia.proficiencyLevel === 'intermediario'
                 );
             expect(estrategiasFiltradasPorNivel.length).toBe(2);
         });
@@ -117,14 +120,14 @@ describe('useStrategies', () => {
                 } as unknown as GetStrategiesResolved
             );
 
-            const { result: resultado } = renderHook(() => useStrategies());
+            const { result } = renderHook(() => useStrategies());
 
             await waitFor(() => {
-                expect(resultado.current.loading).toBe(false);
+                expect(result.current.loading).toBe(false);
             });
 
             const estrategiasFiltradasPorNome =
-                resultado.current.strategies.filter((estrategia) =>
+                result.current.strategies.filter((estrategia) =>
                     estrategia.name.toLowerCase().includes('ten')
                 );
 
@@ -143,14 +146,14 @@ describe('useStrategies', () => {
 
             const filtrosPadrao: StrategyFilters = {};
 
-            const { result: resultado } = renderHook(() => useStrategies(filtrosPadrao));
+            const { result } = renderHook(() => useStrategies(filtrosPadrao));
 
             await waitFor(() => {
-                expect(resultado.current.loading).toBe(false);
+                expect(result.current.loading).toBe(false);
             });
 
-            expect(resultado.current.strategies).toEqual([]);
-            expect(resultado.current.error).toBeNull();
+            expect(result.current.strategies).toEqual([]);
+            expect(result.current.error).toBeNull();
         });
     });
 
@@ -163,24 +166,217 @@ describe('useStrategies', () => {
                 } as unknown as GetStrategiesResolved);
 
             const filtrosPadrao: StrategyFilters = {};
-            const { result: resultado } = renderHook(() =>
-                useStrategies(filtrosPadrao)
+            const { result } = renderHook(() => useStrategies(filtrosPadrao));
+
+            await waitFor(() => {
+                expect(result.current.loading).toBe(false);
+            });
+
+            expect(result.current.error).toBeDefined();
+            expect(result.current.strategies).toEqual([]);
+
+            await act(async () => {
+                await result.current.refetch();
+            });
+
+            expect(result.current.loading).toBe(false);
+            expect(result.current.error).toBeNull();
+            expect(result.current.strategies).toEqual(estrategiasMock);
+        });
+    });
+
+    describe('Integração com filtros (lado do hook)', () => {
+        it('deve chamar getStrategies com os filtros fornecidos', async () => {
+            const filtros: StrategyFilters = {
+                proficiencyLevel: 'iniciante',
+                marketOutlook: 'bullish',
+            };
+
+            vi.mocked(apiService.apiService.getStrategies).mockResolvedValueOnce(
+                { data: [] } as unknown as GetStrategiesResolved
+            );
+
+            renderHook(() => useStrategies(filtros));
+
+            await waitFor(() => {
+                expect(apiService.apiService.getStrategies).toHaveBeenCalledTimes(1);
+            });
+
+            expect(apiService.apiService.getStrategies).toHaveBeenCalledWith(filtros);
+        });
+
+        it('deve refazer a busca quando os filtros mudam', async () => {
+            const filtrosIniciais: StrategyFilters = {
+                proficiencyLevel: 'iniciante',
+            };
+            const filtrosAtualizados: StrategyFilters = {
+                proficiencyLevel: 'avancado',
+                marketOutlook: 'bearish',
+            };
+
+            vi.mocked(apiService.apiService.getStrategies)
+                .mockResolvedValueOnce({ data: [] } as unknown as GetStrategiesResolved)
+                .mockResolvedValueOnce({ data: estrategiasMock } as unknown as GetStrategiesResolved);
+
+            const { rerender } = renderHook(
+                (props: StrategyFilters) => useStrategies(props),
+                { initialProps: filtrosIniciais }
             );
 
             await waitFor(() => {
-                expect(resultado.current.loading).toBe(false);
+                expect(apiService.apiService.getStrategies).toHaveBeenCalledTimes(1);
+            });
+            expect(
+                vi.mocked(apiService.apiService.getStrategies).mock.calls[0][0]
+            ).toEqual(filtrosIniciais);
+
+            rerender(filtrosAtualizados);
+
+            await waitFor(() => {
+                expect(apiService.apiService.getStrategies).toHaveBeenCalledTimes(2);
             });
 
-            expect(resultado.current.error).toBeDefined();
-            expect(resultado.current.strategies).toEqual([]);
-
-            await act(async () => {
-                await resultado.current.refetch();
-            });
-
-            expect(resultado.current.loading).toBe(false);
-            expect(resultado.current.error).toBeNull();
-            expect(resultado.current.strategies).toEqual(estrategiasMock);
+            expect(
+                vi.mocked(apiService.apiService.getStrategies).mock.calls[1][0]
+            ).toEqual(filtrosAtualizados);
         });
+    });
+
+    describe('Tratamento de erros Axios específicos', () => {
+        it('deve usar mensagem de erro da API quando disponível (AxiosError)', async () => {
+            const mensagemApi = 'Erro ao buscar estratégias';
+
+            const axiosErrorComMensagem = {
+                isAxiosError: true,
+                response: {
+                    data: {
+                        message: mensagemApi,
+                    },
+                },
+            } as unknown as Error;
+
+            vi.mocked(apiService.apiService.getStrategies).mockRejectedValueOnce(
+                axiosErrorComMensagem
+            );
+
+            const { result } = renderHook(() => useStrategies());
+
+            await waitFor(() => {
+                expect(result.current.loading).toBe(false);
+            });
+
+            expect(result.current.error).toBe(mensagemApi);
+            expect(result.current.strategies).toEqual([]);
+        });
+
+        it('deve usar mensagem genérica quando AxiosError não traz mensagem', async () => {
+            const axiosErrorSemMensagem = {
+                isAxiosError: true,
+                response: {
+                    data: {},
+                },
+            } as unknown as Error;
+
+            vi.mocked(apiService.apiService.getStrategies).mockRejectedValueOnce(
+                axiosErrorSemMensagem
+            );
+
+            const { result } = renderHook(() => useStrategies());
+
+            await waitFor(() => {
+                expect(result.current.loading).toBe(false);
+            });
+
+            expect(result.current.error).toBe('Erro ao buscar estratégias');
+            expect(result.current.strategies).toEqual([]);
+        });
+    });
+});
+
+describe('useStrategy', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    const strategyMock = {
+        id: '1',
+        name: 'Bull Call Spread',
+        summary: 'Bullish com risco limitado',
+        description: 'Detalhes da estratégia',
+        proficiencyLevel: 'intermediario',
+        marketOutlook: 'bullish',
+        volatilityView: 'alta',
+        riskProfile: 'medio',
+        rewardProfile: 'medio',
+        strategyType: 'vertical_spread',
+        createdAt: '2024-01-01',
+        updatedAt: '2024-01-02',
+        legs: [],
+    };
+
+    it('deve buscar estratégia por id com sucesso', async () => {
+        vi.mocked(apiService.apiService.getStrategy).mockResolvedValueOnce(
+            {
+                data: strategyMock,
+            } as unknown as GetStrategyResolved
+        );
+
+        const { result } = renderHook(() => useStrategy('1'));
+
+        await waitFor(() => {
+            expect(result.current.loading).toBe(false);
+        });
+
+        expect(result.current.strategy).toEqual(strategyMock);
+        expect(result.current.error).toBeNull();
+    });
+
+    it('não deve buscar quando id é vazio', async () => {
+        const { result } = renderHook(() => useStrategy(''));
+
+        await waitFor(() => {
+            expect(result.current.loading).toBe(false);
+        });
+
+        expect(apiService.apiService.getStrategy).not.toHaveBeenCalled();
+        expect(result.current.strategy).toBeNull();
+        expect(result.current.error).toBeNull();
+    });
+
+    it('deve tratar erro Axios com mensagem em useStrategy', async () => {
+        const mensagemApi = 'Erro específico ao buscar estratégia';
+
+        const axiosErrorComMensagem = {
+            isAxiosError: true,
+            response: { data: { message: mensagemApi } },
+        } as unknown as Error;
+
+        vi.mocked(apiService.apiService.getStrategy).mockRejectedValueOnce(
+            axiosErrorComMensagem
+        );
+
+        const { result } = renderHook(() => useStrategy('1'));
+
+        await waitFor(() => {
+            expect(result.current.loading).toBe(false);
+        });
+
+        expect(result.current.error).toBe(mensagemApi);
+        expect(result.current.strategy).toBeNull();
+    });
+
+    it('deve usar mensagem genérica em erro não Axios em useStrategy', async () => {
+        vi.mocked(apiService.apiService.getStrategy).mockRejectedValueOnce(
+            new Error('Falha na API')
+        );
+
+        const { result } = renderHook(() => useStrategy('1'));
+
+        await waitFor(() => {
+            expect(result.current.loading).toBe(false);
+        });
+
+        expect(result.current.error).toBe('Erro ao buscar estratégia');
+        expect(result.current.strategy).toBeNull();
     });
 });
