@@ -30,15 +30,20 @@ async function bootstrap() {
     // Prefixo global de rotas
     app.setGlobalPrefix('api');
 
-    const port = process.env.SERVER_PORT || 3001;
+    const port = process.env.PORT || process.env.SERVER_PORT || 3001;
 
     await app.listen(port, () => {
+        const host =
+            process.env.NODE_ENV === 'production'
+                ? '0.0.0.0'
+                : 'localhost';
+
         console.log(`
     ╔════════════════════════════════════════════════════════════╗
     ║                                                            ║
     ║   Trading Strategies API - NestJS                          ║
     ║                                                            ║
-    ║   Server rodando em: http://localhost:${port}                 ║
+    ║   Server rodando em: http://${host}:${port}                   ║
     ║                                                            ║
     ║   Endpoints disponíveis:                                   ║
     ║   - GET    /api/strategies                                 ║
@@ -47,7 +52,7 @@ async function bootstrap() {
     ║   - GET    /api/users/:id/profile                          ║
     ║   - GET    /api/auth/me                                    ║
     ║                                                            ║
-    ║   Documentação: http://localhost:${port}/api/docs             ║
+    ║   Documentação: http://${host}:${port}/api/docs               ║
     ║                                                            ║
     ╚════════════════════════════════════════════════════════════╝
     ` );
