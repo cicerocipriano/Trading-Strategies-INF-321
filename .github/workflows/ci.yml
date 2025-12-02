@@ -1,5 +1,3 @@
-# .github/workflows/ci.yml
-
 name: CI
 
 on:
@@ -32,9 +30,9 @@ jobs:
       - name: Instalar dependências (pnpm)
         run: pnpm install --frozen-lockfile
 
-  # 2. Testes
+  # 2. Testes (Jest + Vitest) e cobertura unificada
   test:
-    name: Testes (Jest) e Artefatos
+    name: Testes (Jest + Vitest) e Artefatos
     runs-on: ubuntu-latest
     needs: setup
 
@@ -89,22 +87,16 @@ jobs:
       - name: Rodar migrations
         run: pnpm run db:migrate
 
-      - name: Rodar a suíte de testes com cobertura
-        run: pnpm run test:server:coverage
+      - name: Rodar testes (server + client) com cobertura para Sonar
+        run: pnpm run test:coverage:sonar
 
-      - name: Upload LCOV do servidor
+      # Upload apenas do LCOV unificado
+      - name: Upload LCOV unificado
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: server-coverage
-          path: test-artifacts/server-coverage/lcov.info
-
-      - name: Upload dos artefatos de teste
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-artifacts
-          path: test-artifacts/
+          name: lcov-merged
+          path: test-artifacts/lcov.info
 
   # 3. Lint
   lint:
@@ -226,19 +218,18 @@ jobs:
       - name: Instalar dependências
         run: pnpm install --frozen-lockfile
 
-      - name: Baixar LCOV do servidor
+      - name: Baixar LCOV unificado
         uses: actions/download-artifact@v4
         with:
-          name: server-coverage
-          path: test-artifacts/server-coverage
+          name: lcov-merged
+          path: test-artifacts
 
-      - name: Mostrar LCOV
+      - name: Mostrar LCOV unificado
         run: |
-          echo "LCOV do Jest:"
-          ls -R test-artifacts/server-coverage
-          head -n 30 test-artifacts/server-coverage/lcov.info
+          echo "=== LCOV unificado (Jest + Vitest) ==="
+          ls -R test-artifacts
+          head -n 30 test-artifacts/lcov.info || true
 
-      # Executar análise do SonarCloud
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v3
         env:

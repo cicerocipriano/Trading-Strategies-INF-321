@@ -31,7 +31,7 @@
     "test:server:coverage": "jest --config jest.config.js apps/server --coverage --coverageReporters=lcov --coverageDirectory=test-artifacts/server-coverage",
     "test:client:coverage:sonar": "vitest --config vitest.config.ts --coverage --coverage.reporter=lcov --coverage.reportsDirectory=test-artifacts/client-coverage",
     "coverage:merge": "node ./scripts/merge-lcov.mjs",
-    "test:coverage:sonar": "pnpm run test:server:coverage"
+    "test:coverage:sonar": "pnpm run test:server:coverage && pnpm run test:client:coverage:sonar && pnpm run coverage:merge"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.9",
