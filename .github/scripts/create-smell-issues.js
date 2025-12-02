@@ -2,10 +2,8 @@ const fs = require('fs');
 const path = require('path');
 
 /**
- * Cria issues de "code smell" com base no relatório JSON do ESLint.
+ * Cria issues de "code smell" de COMPLEXIDADE com base no relatório JSON do ESLint.
  *
- * Este módulo é pensado para ser executado dentro do GitHub Actions
- * via actions/github-script, que injeta os objetos { github, context, core }.
  *
  * @param {object} params
  * @param {import('@actions/github').GitHub} params.github
@@ -35,22 +33,28 @@ module.exports = async function createSmellIssues({ github, context, core }) {
 
             // Normaliza o path para ficar relativo ao repo
             const filePath = file.filePath.replace(workspace + path.sep, '');
+
             const title = `[Code Smell: Complexity] ${filePath}:${message.line}`;
 
-            const body =
-                `Foi detectada uma alta complexidade ciclomática, indicando um possível Code Smell.
-                **Detalhes:**
-                - **Arquivo:** \`${filePath}\`
-                - **Linha:** ${message.line}
-                - **Coluna:** ${message.column}
-                - **Mensagem do ESLint:** ${message.message}
-                - **Regra:** \`${message.ruleId}\`
-                Sugestão: refatore esta função/método para reduzir a complexidade e distribuir melhor as responsabilidades.`;
+            const body = `
+                        **Tipo (Sonar-style):** CODE_SMELL
+
+                        Foi detectada uma alta complexidade ciclomática, indicando um possível Code Smell.
+
+                        **Detalhes:**
+                        - **Arquivo:** \`${filePath}\`
+                        - **Linha:** ${message.line}
+                        - **Coluna:** ${message.column}
+                        - **Mensagem do ESLint:** ${message.message}
+                        - **Regra:** \`${message.ruleId}\`
+
+                        Sugestão: refatore esta função/método para reduzir a complexidade e distribuir melhor as responsabilidades.
+                        `.trim();
 
             issuesToCreate.push({
                 title,
                 body,
-                labels: ['Code-smell', 'Refatorar', 'Complexidade'],
+                labels: ['Débito-técnico', 'Code-smell', 'Complexidade', 'Refatorar'],
             });
         }
     }
@@ -85,7 +89,9 @@ module.exports = async function createSmellIssues({ github, context, core }) {
         }
 
         if (created >= MAX_ISSUES) {
-            core.warning(`Limite de ${MAX_ISSUES} issues atingido neste run. Outras ocorrências serão ignoradas.`);
+            core.warning(
+                `Limite de ${MAX_ISSUES} issues atingido neste run. Outras ocorrências serão ignoradas.`
+            );
             break;
         }
 

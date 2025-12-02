@@ -300,3 +300,61 @@ jobs:
           script: |
             const run = require('.github/scripts/create-smell-issues');
             await run({ github, context, core });
+
+  # 9. Qlty – Smells com classificação
+  qlty-smells:
+    name: Qlty – Smells e Issues
+    runs-on: ubuntu-latest
+    needs: [test, lint]
+    if: github.ref == 'refs/heads/develop' && !contains(join(needs.*.result, ','), 'failure')
+
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configurar pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Instalar dependências (monorepo)
+        run: pnpm install --frozen-lockfile
+
+      - name: Instalar Qlty CLI
+        uses: qltysh/qlty-action/install@main
+
+      - name: Inicializar Qlty
+        run: qlty init --no
+
+      - name: Rodar Qlty no Server (apps/server)
+        run: |
+          cd apps/server
+          qlty check --sarif . > ../../server_report.json
+        continue-on-error: true
+
+      - name: Rodar Qlty no Client (apps/client)
+        run: |
+          cd apps/client
+          qlty check --sarif . > ../../client_report.json
+        continue-on-error: true
+
+      - name: Criar Issues de Smells (QLTY)
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const run = require('.github/scripts/create-qlty-smells-issues');
+            await run({ github, context, core });
