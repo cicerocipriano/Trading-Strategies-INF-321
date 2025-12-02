@@ -41,13 +41,13 @@ export const useStrategies = (filters: StrategyFilters = {}) => {
         } catch (err: unknown) {
             const errorMessage =
                 axios.isAxiosError(err)
-                    ? (err.response?.data as { message?: string })?.message || 'Erro ao buscar estratégias'
+                    ? (err.response?.data as { message?: string })?.message ||
+                    'Erro ao buscar estratégias'
                     : 'Erro ao buscar estratégias';
 
             setError(errorMessage);
             console.error('Erro ao buscar estratégias:', err);
-        }
-        finally {
+        } finally {
             setLoading(false);
         }
     }, [filters]);
@@ -65,7 +65,9 @@ export const useStrategies = (filters: StrategyFilters = {}) => {
 };
 
 export const useStrategy = (id: string) => {
-    const [strategy, setStrategy] = useState<Strategy & { legs: unknown[] } | null>(null);
+    const [strategy, setStrategy] = useState<Strategy & { legs: unknown[] } | null>(
+        null
+    );
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -80,7 +82,8 @@ export const useStrategy = (id: string) => {
             } catch (err: unknown) {
                 const errorMessage =
                     axios.isAxiosError(err)
-                        ? (err.response?.data as { message?: string })?.message || 'Erro ao buscar estratégia'
+                        ? (err.response?.data as { message?: string })?.message ||
+                        'Erro ao buscar estratégia'
                         : 'Erro ao buscar estratégia';
 
                 setError(errorMessage);

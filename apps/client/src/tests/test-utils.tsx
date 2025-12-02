@@ -1,5 +1,10 @@
 import React, { ReactElement } from 'react';
-import { render, RenderOptions } from '@testing-library/react';
+import {
+    render,
+    RenderOptions,
+    renderHook,
+    RenderHookOptions,
+} from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const createTestQueryClient = () =>
@@ -23,7 +28,7 @@ export function renderWithProviders(
     {
         queryClient = createTestQueryClient(),
         ...renderOptions
-    }: ExtendedRenderOptions = {},
+    }: ExtendedRenderOptions = {}
 ) {
     function Wrapper({ children }: { children: React.ReactNode }) {
         return (
@@ -39,5 +44,25 @@ export function renderWithProviders(
     };
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export * from '@testing-library/react';
 export { default as userEvent } from '@testing-library/user-event';
+
+export function renderHookWithProviders<TProps, TResult>(
+    callback: (props: TProps) => TResult,
+    options: RenderHookOptions<TProps> = {}
+) {
+    const queryClient = createTestQueryClient();
+
+    const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+
+    return {
+        ...renderHook(callback, {
+            wrapper: Wrapper,
+            ...options,
+        }),
+        queryClient,
+    };
+}

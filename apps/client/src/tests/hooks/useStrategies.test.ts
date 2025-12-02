@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
-import { useStrategies } from '@/hooks/useStrategies';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { StrategyFilters, useStrategies } from '@/hooks/useStrategies';
 import * as apiService from '@/services/api';
 
 vi.mock('@/services/api', () => ({
@@ -9,19 +9,23 @@ vi.mock('@/services/api', () => ({
     },
 }));
 
+type ApiServiceType = typeof apiService.apiService;
+type GetStrategiesReturn = ReturnType<ApiServiceType['getStrategies']>;
+type GetStrategiesResolved = Awaited<GetStrategiesReturn>;
+
 describe('useStrategies', () => {
-    const mockStrategies = [
+    const estrategiasMock = [
         {
             id: '1',
-            name: 'Bull Call Spread',
-            summary: 'A bullish strategy',
-            proficiencyLevel: 'intermediate',
+            name: 'Ten Breakout',
+            summary: 'A grunge strategy',
+            proficiencyLevel: 'intermediario',
         },
         {
             id: '2',
-            name: 'Bear Put Spread',
-            summary: 'A bearish strategy',
-            proficiencyLevel: 'intermediate',
+            name: 'Vs Momentum',
+            summary: 'A groove strategy',
+            proficiencyLevel: 'intermediario',
         },
     ];
 
@@ -29,132 +33,154 @@ describe('useStrategies', () => {
         vi.clearAllMocks();
     });
 
-    describe('Fetching Strategies', () => {
-        it('should fetch strategies successfully', async () => {
-            vi.mocked(apiService.apiService.getStrategies).mockResolvedValueOnce({
-                data: mockStrategies,
-            } as any);
+    describe('Busca de Estratégias', () => {
+        it('deve buscar estratégias com sucesso', async () => {
+            vi.mocked(apiService.apiService.getStrategies).mockResolvedValueOnce(
+                {
+                    data: estrategiasMock,
+                } as unknown as GetStrategiesResolved
+            );
 
-            const { result } = renderHook(() => useStrategies());
+            const filtrosPadrao: StrategyFilters = {};
+
+            const { result: resultado } = renderHook(() =>
+                useStrategies(filtrosPadrao)
+            );
 
             await waitFor(() => {
-                expect(result.current.isLoading).toBe(false);
+                expect(resultado.current.loading).toBe(false);
             });
 
-            expect(result.current.strategies).toEqual(mockStrategies);
-            expect(result.current.error).toBeNull();
+            expect(resultado.current.strategies).toEqual(estrategiasMock);
+            expect(resultado.current.error).toBeNull();
         });
 
-        it('should handle fetch error', async () => {
-            const errorMessage = 'Failed to fetch strategies';
+        it('deve tratar erro ao buscar estratégias', async () => {
+            const mensagemErro = 'Falha ao buscar estratégias da turnê "Ten"';
             vi.mocked(apiService.apiService.getStrategies).mockRejectedValueOnce(
-                new Error(errorMessage)
+                new Error(mensagemErro)
             );
 
-            const { result } = renderHook(() => useStrategies());
+            const { result: resultado } = renderHook(() => useStrategies());
 
             await waitFor(() => {
-                expect(result.current.isLoading).toBe(false);
+                expect(resultado.current.loading).toBe(false);
             });
 
-            expect(result.current.error).toBeDefined();
-            expect(result.current.strategies).toEqual([]);
+            expect(resultado.current.error).toBeDefined();
+            expect(resultado.current.strategies).toEqual([]);
         });
 
-        it('should set loading state correctly', async () => {
-            vi.mocked(apiService.apiService.getStrategies).mockResolvedValueOnce({
-                data: mockStrategies,
-            } as any);
+        it('deve controlar corretamente o estado de carregamento', async () => {
+            vi.mocked(apiService.apiService.getStrategies).mockResolvedValueOnce(
+                {
+                    data: estrategiasMock,
+                } as unknown as GetStrategiesResolved
+            );
 
-            const { result } = renderHook(() => useStrategies());
+            const { result: resultado } = renderHook(() => useStrategies());
 
-            // Initially loading
-            expect(result.current.isLoading).toBe(true);
+            expect(resultado.current.loading).toBe(true);
 
-            // After fetch
             await waitFor(() => {
-                expect(result.current.isLoading).toBe(false);
+                expect(resultado.current.loading).toBe(false);
             });
         });
     });
 
-    describe('Filtering', () => {
-        it('should filter strategies by proficiency level', async () => {
-            vi.mocked(apiService.apiService.getStrategies).mockResolvedValueOnce({
-                data: mockStrategies,
-            } as any);
+    describe('Filtragem', () => {
+        it('deve filtrar estratégias por nível de proficiência', async () => {
+            vi.mocked(apiService.apiService.getStrategies).mockResolvedValueOnce(
+                {
+                    data: estrategiasMock,
+                } as unknown as GetStrategiesResolved
+            );
 
-            const { result } = renderHook(() => useStrategies());
+            const { result: resultado } = renderHook(() => useStrategies());
 
             await waitFor(() => {
-                expect(result.current.isLoading).toBe(false);
+                expect(resultado.current.loading).toBe(false);
             });
 
-            const filtered = result.current.strategies.filter(
-                (s) => s.proficiencyLevel === 'intermediate'
-            );
-            expect(filtered.length).toBe(2);
+            const estrategiasFiltradasPorNivel =
+                resultado.current.strategies.filter(
+                    (estrategia) =>
+                        estrategia.proficiencyLevel === 'intermediario'
+                );
+            expect(estrategiasFiltradasPorNivel.length).toBe(2);
         });
 
-        it('should filter strategies by name', async () => {
-            vi.mocked(apiService.apiService.getStrategies).mockResolvedValueOnce({
-                data: mockStrategies,
-            } as any);
+        it('deve filtrar estratégias pelo nome', async () => {
+            vi.mocked(apiService.apiService.getStrategies).mockResolvedValueOnce(
+                {
+                    data: estrategiasMock,
+                } as unknown as GetStrategiesResolved
+            );
 
-            const { result } = renderHook(() => useStrategies());
+            const { result: resultado } = renderHook(() => useStrategies());
 
             await waitFor(() => {
-                expect(result.current.isLoading).toBe(false);
+                expect(resultado.current.loading).toBe(false);
             });
 
-            const filtered = result.current.strategies.filter((s) =>
-                s.name.toLowerCase().includes('bull')
-            );
-            expect(filtered.length).toBe(1);
-            expect(filtered[0].name).toBe('Bull Call Spread');
+            const estrategiasFiltradasPorNome =
+                resultado.current.strategies.filter((estrategia) =>
+                    estrategia.name.toLowerCase().includes('ten')
+                );
+
+            expect(estrategiasFiltradasPorNome.length).toBe(1);
+            expect(estrategiasFiltradasPorNome[0].name).toBe('Ten Breakout');
         });
     });
 
-    describe('Empty Results', () => {
-        it('should handle empty strategies list', async () => {
-            vi.mocked(apiService.apiService.getStrategies).mockResolvedValueOnce({
-                data: [],
-            } as any);
+    describe('Resultados Vazios', () => {
+        it('deve tratar corretamente lista vazia de estratégias', async () => {
+            vi.mocked(apiService.apiService.getStrategies).mockResolvedValueOnce(
+                {
+                    data: [],
+                } as unknown as GetStrategiesResolved
+            );
 
-            const { result } = renderHook(() => useStrategies());
+            const filtrosPadrao: StrategyFilters = {};
+
+            const { result: resultado } = renderHook(() => useStrategies(filtrosPadrao));
 
             await waitFor(() => {
-                expect(result.current.isLoading).toBe(false);
+                expect(resultado.current.loading).toBe(false);
             });
 
-            expect(result.current.strategies).toEqual([]);
-            expect(result.current.error).toBeNull();
+            expect(resultado.current.strategies).toEqual([]);
+            expect(resultado.current.error).toBeNull();
         });
     });
 
-    describe('Retry Logic', () => {
-        it('should retry on failure', async () => {
+    describe('Lógica de Retentativa', () => {
+        it('deve tentar novamente após falha inicial', async () => {
             vi.mocked(apiService.apiService.getStrategies)
-                .mockRejectedValueOnce(new Error('Network error'))
+                .mockRejectedValueOnce(new Error('Erro de rede ao carregar'))
                 .mockResolvedValueOnce({
-                    data: mockStrategies,
-                } as any);
+                    data: estrategiasMock,
+                } as unknown as GetStrategiesResolved);
 
-            const { result, rerender } = renderHook(() => useStrategies());
-
-            await waitFor(() => {
-                expect(result.current.isLoading).toBe(false);
-            });
-
-            // Should have error on first attempt
-            expect(result.current.error).toBeDefined();
-
-            // Simulate retry
-            rerender();
+            const filtrosPadrao: StrategyFilters = {};
+            const { result: resultado } = renderHook(() =>
+                useStrategies(filtrosPadrao)
+            );
 
             await waitFor(() => {
-                expect(result.current.isLoading).toBe(false);
+                expect(resultado.current.loading).toBe(false);
             });
+
+            expect(resultado.current.error).toBeDefined();
+            expect(resultado.current.strategies).toEqual([]);
+
+            await act(async () => {
+                await resultado.current.refetch();
+            });
+
+            expect(resultado.current.loading).toBe(false);
+            expect(resultado.current.error).toBeNull();
+            expect(resultado.current.strategies).toEqual(estrategiasMock);
         });
     });
 });

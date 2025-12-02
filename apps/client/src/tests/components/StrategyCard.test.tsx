@@ -3,15 +3,39 @@ import { screen, fireEvent } from '@testing-library/react';
 import { StrategyCard } from '@/components/strategies/StrategyCard';
 import { renderWithProviders } from '../test-utils';
 
-// Mock window.location
-delete (window as any).location;
-window.location = { href: '' } as any;
+interface MockLocation {
+    href: string;
+}
 
-describe('StrategyCard', () => {
-    const mockStrategy = {
+delete (window as Partial<typeof window>).location; // Remove a propriedade original
+// Redefine a propriedade location com um mock
+Object.defineProperty(window, 'location', {
+    configurable: true,
+    value: {
+        href: '',
+        origin: 'http://localhost',
+        protocol: 'http:',
+        host: 'localhost',
+        hostname: 'localhost',
+        port: '',
+        pathname: '/',
+        search: '',
+        hash: '',
+        reload: vi.fn(),
+        replace: vi.fn(),
+        assign: vi.fn(),
+    } as MockLocation,
+});
+
+describe('Componente StrategyCard', () => {
+    type StrategyCardProps = Parameters<typeof StrategyCard>[0];
+    type Strategy = StrategyCardProps['strategy'];
+
+    const estrategiaMock: Strategy = {
         id: '1',
-        name: 'Bull Call Spread',
-        summary: 'A bullish strategy with limited profit and loss',
+        name: 'Black Hole Sun Spread',
+        summary:
+            'O conceito de estratégia, em grego strateegia, em latim strategi, em francês stratégie...',
         proficiencyLevel: 'intermediate',
         marketOutlook: 'bullish',
         volatilityView: 'low',
@@ -22,97 +46,124 @@ describe('StrategyCard', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
+        window.location.href = '';
     });
 
-    describe('Rendering', () => {
-        it('should render strategy name', () => {
-            renderWithProviders(<StrategyCard strategy={mockStrategy} />);
-            expect(screen.getByText('Bull Call Spread')).toBeInTheDocument();
+    describe('Renderização', () => {
+        it('deve renderizar o nome da estratégia', () => {
+            renderWithProviders(<StrategyCard strategy={estrategiaMock} />);
+            expect(
+                screen.getByText('Black Hole Sun Spread')
+            ).toBeInTheDocument();
         });
 
-        it('should render strategy summary', () => {
-            renderWithProviders(<StrategyCard strategy={mockStrategy} />);
-            expect(screen.getByText('A bullish strategy with limited profit and loss')).toBeInTheDocument();
+        it('deve renderizar o resumo da estratégia', () => {
+            renderWithProviders(<StrategyCard strategy={estrategiaMock} />);
+            expect(
+                screen.getByText(
+                    'O conceito de estratégia, em grego strateegia, em latim strategi, em francês stratégie...'
+                )
+            ).toBeInTheDocument();
         });
 
-        it('should render proficiency level badge', () => {
-            renderWithProviders(<StrategyCard strategy={mockStrategy} />);
+        it('deve renderizar o badge de nível de proficiência', () => {
+            renderWithProviders(<StrategyCard strategy={estrategiaMock} />);
             const badges = screen.getAllByText(/intermediate|Intermediário/i);
             expect(badges.length).toBeGreaterThan(0);
         });
 
-        it('should render market outlook badge', () => {
-            renderWithProviders(<StrategyCard strategy={mockStrategy} />);
+        it('deve renderizar o badge de visão de mercado', () => {
+            renderWithProviders(<StrategyCard strategy={estrategiaMock} />);
             const badges = screen.getAllByText(/bullish|Altista/i);
             expect(badges.length).toBeGreaterThan(0);
         });
 
-        it('should render action buttons', () => {
-            renderWithProviders(<StrategyCard strategy={mockStrategy} />);
+        it('deve renderizar os botões de ação', () => {
+            renderWithProviders(<StrategyCard strategy={estrategiaMock} />);
             expect(screen.getByText('Ver detalhes')).toBeInTheDocument();
             expect(screen.getByText('Simular')).toBeInTheDocument();
         });
 
-        it('should handle missing optional fields gracefully', () => {
-            const minimalStrategy = {
+        it('deve lidar graciosamente com campos opcionais ausentes', () => {
+            const estrategiaMinima: Strategy = {
                 id: '2',
-                name: 'Simple Strategy',
+                name: 'Superunknown Strategy',
             };
 
-            renderWithProviders(<StrategyCard strategy={minimalStrategy as any} />);
-            expect(screen.getByText('Simple Strategy')).toBeInTheDocument();
+            renderWithProviders(<StrategyCard strategy={estrategiaMinima} />);
+            expect(
+                screen.getByText('Superunknown Strategy')
+            ).toBeInTheDocument();
             expect(screen.getByText('Ver detalhes')).toBeInTheDocument();
         });
     });
 
-    describe('Navigation', () => {
-        it('should navigate to strategy details on "Ver detalhes" click', () => {
-            renderWithProviders(<StrategyCard strategy={mockStrategy} />);
+    describe('Navegação', () => {
+        it('deve navegar para os detalhes da estratégia ao clicar em "Ver detalhes"', () => {
+            renderWithProviders(<StrategyCard strategy={estrategiaMock} />);
 
-            const detailsButton = screen.getByText('Ver detalhes');
-            fireEvent.click(detailsButton);
+            const botaoDetalhes = screen.getByText('Ver detalhes');
+            fireEvent.click(botaoDetalhes);
 
             expect(window.location.href).toBe('/strategies/1');
         });
 
-        it('should navigate with correct strategy ID', () => {
-            const strategyWithDifferentId = { ...mockStrategy, id: '123' };
-            renderWithProviders(<StrategyCard strategy={strategyWithDifferentId} />);
+        it('deve navegar com o ID correto da estratégia', () => {
+            const estrategiaComIdDiferente: Strategy = {
+                ...estrategiaMock,
+                id: '123',
+            };
+            renderWithProviders(
+                <StrategyCard strategy={estrategiaComIdDiferente} />
+            );
 
-            const detailsButton = screen.getByText('Ver detalhes');
-            fireEvent.click(detailsButton);
+            const botaoDetalhes = screen.getByText('Ver detalhes');
+            fireEvent.click(botaoDetalhes);
 
             expect(window.location.href).toBe('/strategies/123');
         });
     });
 
-    describe('Simulation Button', () => {
-        it('should handle simulate button click', () => {
-            const consoleSpy = vi.spyOn(console, 'log');
-            renderWithProviders(<StrategyCard strategy={mockStrategy} />);
+    describe('Botão de Simulação', () => {
+        it('deve tratar o clique no botão de simulação', () => {
+            const espiaConsole = vi.spyOn(console, 'log');
+            renderWithProviders(<StrategyCard strategy={estrategiaMock} />);
 
-            const simulateButton = screen.getByText('Simular');
-            fireEvent.click(simulateButton);
+            const botaoSimular = screen.getByText('Simular');
+            fireEvent.click(botaoSimular);
 
-            expect(consoleSpy).toHaveBeenCalledWith('Simular estratégia', '1');
+            expect(espiaConsole).toHaveBeenCalledWith(
+                'Simular estratégia',
+                '1'
+            );
         });
 
-        it('should log correct strategy ID on simulate', () => {
-            const consoleSpy = vi.spyOn(console, 'log');
-            const strategyWithDifferentId = { ...mockStrategy, id: '456' };
+        it('deve logar o ID correto da estratégia ao simular', () => {
+            const espiaConsole = vi.spyOn(console, 'log');
+            const estrategiaComOutroId: Strategy = {
+                ...estrategiaMock,
+                id: '456',
+            };
 
-            renderWithProviders(<StrategyCard strategy={strategyWithDifferentId} />);
+            renderWithProviders(
+                <StrategyCard strategy={estrategiaComOutroId} />
+            );
 
-            const simulateButton = screen.getByText('Simular');
-            fireEvent.click(simulateButton);
+            const botaoSimular = screen.getByText('Simular');
+            fireEvent.click(botaoSimular);
 
-            expect(consoleSpy).toHaveBeenCalledWith('Simular estratégia', '456');
+            expect(espiaConsole).toHaveBeenCalledWith(
+                'Simular estratégia',
+                '456'
+            );
         });
     });
 
-    describe('Styling and Display', () => {
-        it('should apply correct CSS classes', () => {
-            const { container } = renderWithProviders(<StrategyCard strategy={mockStrategy} />);
+    describe('Estilo e Exibição', () => {
+        it('deve aplicar as classes CSS corretas', () => {
+            const { container } = renderWithProviders(
+                <StrategyCard strategy={estrategiaMock} />
+            );
             const card = container.querySelector('.ts-glass-surface');
             expect(card).toBeInTheDocument();
             expect(card).toHaveClass('ts-glass-hover-lift');
@@ -120,58 +171,75 @@ describe('StrategyCard', () => {
             expect(card).toHaveClass('p-6');
         });
 
-        it('should display all badges when all fields are present', () => {
-            const { container } = renderWithProviders(<StrategyCard strategy={mockStrategy} />);
+        it('deve exibir todos os badges quando todos os campos estiverem presentes', () => {
+            const { container } = renderWithProviders(
+                <StrategyCard strategy={estrategiaMock} />
+            );
             const badges = container.querySelectorAll('span.inline-flex');
-            // Should have multiple badges for different attributes
             expect(badges.length).toBeGreaterThan(1);
         });
 
-        it('should truncate long summaries', () => {
-            const longSummary = 'A'.repeat(500);
-            const strategyWithLongSummary = {
-                ...mockStrategy,
-                summary: longSummary,
+        it('deve truncar resumos muito longos', () => {
+            const resumoLongoSoundgarden = 'A'.repeat(500);
+            const estrategiaComResumoLongo: Strategy = {
+                ...estrategiaMock,
+                summary: resumoLongoSoundgarden,
             };
 
             const { container } = renderWithProviders(
-                <StrategyCard strategy={strategyWithLongSummary} />
+                <StrategyCard strategy={estrategiaComResumoLongo} />
             );
 
-            const summaryElement = container.querySelector('p.line-clamp-3');
-            expect(summaryElement).toBeInTheDocument();
+            const elementoResumo = container.querySelector('p.line-clamp-3');
+            expect(elementoResumo).toBeInTheDocument();
         });
     });
 
-    describe('Edge Cases', () => {
-        it('should handle numeric ID', () => {
-            const strategyWithNumericId = { ...mockStrategy, id: 999 };
-            renderWithProviders(<StrategyCard strategy={strategyWithNumericId} />);
+    describe('Casos Limite', () => {
+        it('deve lidar com ID numérico', () => {
+            const estrategiaComIdNumerico: Strategy = {
+                ...estrategiaMock,
+                id: 999,
+            };
+            renderWithProviders(
+                <StrategyCard strategy={estrategiaComIdNumerico} />
+            );
 
-            const detailsButton = screen.getByText('Ver detalhes');
-            fireEvent.click(detailsButton);
+            const botaoDetalhes = screen.getByText('Ver detalhes');
+            fireEvent.click(botaoDetalhes);
 
             expect(window.location.href).toBe('/strategies/999');
         });
 
-        it('should handle empty summary', () => {
-            const strategyWithEmptySummary = { ...mockStrategy, summary: '' };
-            renderWithProviders(<StrategyCard strategy={strategyWithEmptySummary} />);
+        it('deve lidar com resumo vazio', () => {
+            const estrategiaComResumoVazio: Strategy = {
+                ...estrategiaMock,
+                summary: '',
+            };
+            renderWithProviders(
+                <StrategyCard strategy={estrategiaComResumoVazio} />
+            );
 
-            expect(screen.getByText('Bull Call Spread')).toBeInTheDocument();
+            expect(
+                screen.getByText('Black Hole Sun Spread')
+            ).toBeInTheDocument();
             expect(screen.getByText('Ver detalhes')).toBeInTheDocument();
         });
 
-        it('should handle null values in optional fields', () => {
-            const strategyWithNulls = {
-                ...mockStrategy,
+        it('deve lidar com valores nulos em campos opcionais', () => {
+            const estrategiaComCamposNulos: Strategy = {
+                ...estrategiaMock,
                 proficiencyLevel: null,
                 marketOutlook: null,
                 volatilityView: null,
             };
 
-            renderWithProviders(<StrategyCard strategy={strategyWithNulls} />);
-            expect(screen.getByText('Bull Call Spread')).toBeInTheDocument();
+            renderWithProviders(
+                <StrategyCard strategy={estrategiaComCamposNulos} />
+            );
+            expect(
+                screen.getByText('Black Hole Sun Spread')
+            ).toBeInTheDocument();
         });
     });
 });

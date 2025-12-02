@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { afterEach, vi } from 'vitest';
+import { afterEach, afterAll, beforeAll, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 
 afterEach(() => {
@@ -10,7 +10,7 @@ const localStorageMock = (() => {
     let store: Record<string, string> = {};
 
     return {
-        getItem: (key: string) => store[key] || null,
+        getItem: (key: string) => store[key] ?? null,
         setItem: (key: string, value: string) => {
             store[key] = value.toString();
         },
@@ -29,7 +29,7 @@ Object.defineProperty(window, 'localStorage', {
 
 Object.defineProperty(window, 'matchMedia', {
     writable: true,
-    value: vi.fn().mockImplementation((query) => ({
+    value: vi.fn().mockImplementation((query: string) => ({
         matches: false,
         media: query,
         onchange: null,
@@ -42,15 +42,20 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 const originalError = console.error;
+
 beforeAll(() => {
-    console.error = (...args: any[]) => {
+    console.error = (...args: unknown[]) => {
+        const [first] = args;
+
         if (
-            typeof args[0] === 'string' &&
-            args[0].includes('Warning: ReactDOM.render')
+            typeof first === 'string' &&
+            first.includes('Warning: ReactDOM.render')
         ) {
             return;
         }
-        originalError.call(console, ...args);
+
+        const typedArgs = args as Parameters<typeof originalError>;
+        originalError(...typedArgs);
     };
 });
 

@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { act, waitFor } from '@testing-library/react';
+import { renderHookWithProviders } from '../test-utils';
 import { useAuth } from '@/hooks/useAuth';
 import * as apiService from '@/services/api';
 
-// Mock the API service
 vi.mock('@/services/api', () => ({
     apiService: {
         getCurrentUser: vi.fn(),
@@ -12,6 +12,13 @@ vi.mock('@/services/api', () => ({
         logout: vi.fn(),
     },
 }));
+
+type ApiServiceType = typeof apiService.apiService;
+type GetCurrentUserReturn = ReturnType<ApiServiceType['getCurrentUser']>;
+type GetCurrentUserResolved = Awaited<GetCurrentUserReturn>;
+type LoginResolved = Awaited<ReturnType<ApiServiceType['login']>>;
+type RegisterResolved = Awaited<ReturnType<ApiServiceType['register']>>;
+type LogoutResolved = Awaited<ReturnType<ApiServiceType['logout']>>;
 
 describe('useAuth', () => {
     beforeEach(() => {
@@ -23,241 +30,296 @@ describe('useAuth', () => {
         localStorage.clear();
     });
 
-    describe('Initial State', () => {
-        it('should initialize with null user and loading true', () => {
-            const { result } = renderHook(() => useAuth());
+    describe('Estado Inicial', () => {
+        it('deve inicializar com usuário nulo e loading true quando existir token e a requisição estiver pendente', () => {
+            localStorage.setItem('accessToken', 'token-facelift');
 
-            expect(result.current.user).toBeNull();
-            expect(result.current.loading).toBe(true);
-            expect(result.current.error).toBeNull();
-            expect(result.current.isAuthenticated).toBe(false);
+            const promessaNuncaResolvida =
+                new Promise<never>(() => { }) as unknown as GetCurrentUserReturn;
+
+            vi.mocked(apiService.apiService.getCurrentUser).mockReturnValue(
+                promessaNuncaResolvida
+            );
+
+            const { result: resultado } = renderHookWithProviders(() => useAuth());
+
+            expect(resultado.current.user).toBeNull();
+            expect(resultado.current.loading).toBe(true);
+            expect(resultado.current.error).toBeNull();
+            expect(resultado.current.isAuthenticated).toBe(false);
         });
 
-        it('should check auth on mount when token exists', async () => {
-            const mockUser = {
+        it('deve verificar autenticação no mount quando existir token', async () => {
+            const usuarioMock = {
                 id: '1',
-                username: 'testuser',
-                email: 'test@example.com',
-                experienceLevel: 'beginner',
-                createdAt: '2024-01-01',
-                updatedAt: '2024-01-01',
+                username: 'layneStaley',
+                email: 'layne.staley@grunge.com',
+                experienceLevel: 'NOVICE',
+                createdAt: '1990-08-21',
+                updatedAt: '1992-09-29',
             };
 
-            localStorage.setItem('accessToken', 'test-token');
-            vi.mocked(apiService.apiService.getCurrentUser).mockResolvedValueOnce({
-                data: mockUser,
-            } as any);
+            localStorage.setItem('accessToken', 'token-dirt');
 
-            const { result } = renderHook(() => useAuth());
+            vi.mocked(apiService.apiService.getCurrentUser).mockResolvedValueOnce(
+                {
+                    data: usuarioMock,
+                } as unknown as GetCurrentUserResolved
+            );
+
+            const { result: resultado } = renderHookWithProviders(() => useAuth());
 
             await waitFor(() => {
-                expect(result.current.loading).toBe(false);
+                expect(resultado.current.loading).toBe(false);
             });
 
-            expect(result.current.user).toEqual(mockUser);
-            expect(result.current.isAuthenticated).toBe(true);
+            expect(resultado.current.user).toEqual(usuarioMock);
+            expect(resultado.current.isAuthenticated).toBe(true);
         });
 
-        it('should set loading to false when no token exists', async () => {
-            const { result } = renderHook(() => useAuth());
+        it('deve definir loading como false quando não existir token', async () => {
+            const { result: resultado } = renderHookWithProviders(() => useAuth());
 
             await waitFor(() => {
-                expect(result.current.loading).toBe(false);
+                expect(resultado.current.loading).toBe(false);
             });
 
-            expect(result.current.user).toBeNull();
+            expect(resultado.current.user).toBeNull();
         });
     });
 
     describe('Login', () => {
-        it('should login successfully', async () => {
-            const mockUser = {
+        it('deve realizar login com sucesso', async () => {
+            const usuarioMock = {
                 id: '1',
-                username: 'testuser',
-                email: 'test@example.com',
-                experienceLevel: 'beginner',
-                createdAt: '2024-01-01',
-                updatedAt: '2024-01-01',
+                username: 'layneStaley',
+                email: 'layne.staley@grunge.com',
+                experienceLevel: 'iniciante',
+                createdAt: '1990-08-21',
+                updatedAt: '1992-09-29',
             };
 
-            vi.mocked(apiService.apiService.login).mockResolvedValueOnce({
-                data: {
-                    user: mockUser,
-                    accessToken: 'access-token',
-                    refreshToken: 'refresh-token',
-                },
-            } as any);
+            vi.mocked(apiService.apiService.login).mockResolvedValueOnce(
+                {
+                    data: {
+                        user: usuarioMock,
+                        accessToken: 'token-facelift-access',
+                        refreshToken: 'token-dirt-refresh',
+                    },
+                } as unknown as LoginResolved
+            );
 
-            const { result } = renderHook(() => useAuth());
+            const { result: resultado } = renderHookWithProviders(() => useAuth());
 
-            let loginResult;
+            let resultadoLogin: unknown;
             await act(async () => {
-                loginResult = await result.current.login('test@example.com', 'password');
-            });
-
-            expect(loginResult).toEqual(mockUser);
-            expect(result.current.user).toEqual(mockUser);
-            expect(result.current.isAuthenticated).toBe(true);
-            expect(localStorage.getItem('accessToken')).toBe('access-token');
-            expect(localStorage.getItem('refreshToken')).toBe('refresh-token');
-        });
-
-        it('should handle login error', async () => {
-            const errorMessage = 'Invalid credentials';
-            vi.mocked(apiService.apiService.login).mockRejectedValueOnce({
-                response: { data: { message: errorMessage } },
-                isAxiosError: true,
-            });
-
-            const { result } = renderHook(() => useAuth());
-
-            await act(async () => {
-                try {
-                    await result.current.login('test@example.com', 'wrong-password');
-                } catch (error) {
-                    // Expected error
-                }
-            });
-
-            expect(result.current.error).toBe(errorMessage);
-            expect(result.current.user).toBeNull();
-            expect(result.current.isAuthenticated).toBe(false);
-        });
-    });
-
-    describe('Register', () => {
-        it('should register successfully', async () => {
-            const mockUser = {
-                id: '1',
-                username: 'newuser',
-                email: 'new@example.com',
-                experienceLevel: 'beginner',
-                createdAt: '2024-01-01',
-                updatedAt: '2024-01-01',
-            };
-
-            vi.mocked(apiService.apiService.register).mockResolvedValueOnce({
-                data: {
-                    user: mockUser,
-                    accessToken: 'access-token',
-                    refreshToken: 'refresh-token',
-                },
-            } as any);
-
-            const { result } = renderHook(() => useAuth());
-
-            let registerResult;
-            await act(async () => {
-                registerResult = await result.current.register(
-                    'newuser',
-                    'new@example.com',
-                    'password',
-                    'beginner'
+                resultadoLogin = await resultado.current.login(
+                    'layne.staley@grunge.com',
+                    'senha-man-in-the-box'
                 );
             });
 
-            expect(registerResult).toEqual(mockUser);
-            expect(result.current.user).toEqual(mockUser);
-            expect(result.current.isAuthenticated).toBe(true);
-            expect(localStorage.getItem('accessToken')).toBe('access-token');
+            expect(resultadoLogin).toEqual(usuarioMock);
+            expect(resultado.current.user).toEqual(usuarioMock);
+            expect(resultado.current.isAuthenticated).toBe(true);
+            expect(localStorage.getItem('accessToken')).toBe('token-facelift-access');
+            expect(localStorage.getItem('refreshToken')).toBe('token-dirt-refresh');
         });
 
-        it('should handle register error', async () => {
-            const errorMessage = 'Email already exists';
-            vi.mocked(apiService.apiService.register).mockRejectedValueOnce({
-                response: { data: { message: errorMessage } },
+        it('deve tratar erro de login', async () => {
+            const mensagemErro = 'Credenciais inválidas para acessar "Dirt"';
+
+            vi.mocked(apiService.apiService.login).mockRejectedValueOnce({
+                response: { data: { message: mensagemErro } },
                 isAxiosError: true,
             });
 
-            const { result } = renderHook(() => useAuth());
+            const { result: resultado } = renderHookWithProviders(() => useAuth());
 
             await act(async () => {
                 try {
-                    await result.current.register('user', 'existing@example.com', 'password');
-                } catch (error) {
-                    // Expected error
+                    await resultado.current.login(
+                        'layne.staley@grunge.com',
+                        'senha-errada-rooster'
+                    );
+                } catch (error: unknown) {
+                    // Apenas garantimos que o erro realmente ocorreu
+                    expect(error).toBeDefined();
                 }
             });
 
-            expect(result.current.error).toBe(errorMessage);
+            expect(resultado.current.error).toBe(mensagemErro);
+            expect(resultado.current.user).toBeNull();
+            expect(resultado.current.isAuthenticated).toBe(false);
+        });
+    });
+
+    describe('Cadastro', () => {
+        it('deve realizar cadastro com sucesso', async () => {
+            const usuarioMock = {
+                id: '2',
+                username: 'jerryCantrell',
+                email: 'jerry.cantrell@aliceinchains.com',
+                experienceLevel: 'intermediario',
+                createdAt: '1995-11-07',
+                updatedAt: '2009-09-29',
+            };
+
+            vi.mocked(apiService.apiService.register).mockResolvedValueOnce(
+                {
+                    data: {
+                        user: usuarioMock,
+                        accessToken: 'token-black-gives-way-to-blue-access',
+                        refreshToken: 'token-jar-of-flies-refresh',
+                    },
+                } as unknown as RegisterResolved
+            );
+
+            const { result: resultado } = renderHookWithProviders(() => useAuth());
+
+            let resultadoCadastro: unknown;
+            await act(async () => {
+                resultadoCadastro = await resultado.current.register(
+                    'jerryCantrell',
+                    'jerry.cantrell@aliceinchains.com',
+                    'senha-rooster',
+                    'intermediario'
+                );
+            });
+
+            expect(resultadoCadastro).toEqual(usuarioMock);
+            expect(resultado.current.user).toEqual(usuarioMock);
+            expect(resultado.current.isAuthenticated).toBe(true);
+            expect(localStorage.getItem('accessToken')).toBe(
+                'token-black-gives-way-to-blue-access'
+            );
+        });
+
+        it('deve tratar erro de cadastro', async () => {
+            const mensagemErro = 'E-mail de Jerry já cadastrado em "Facelift"';
+
+            vi.mocked(apiService.apiService.register).mockRejectedValueOnce({
+                response: { data: { message: mensagemErro } },
+                isAxiosError: true,
+            });
+
+            const { result: resultado } = renderHookWithProviders(() => useAuth());
+
+            await act(async () => {
+                try {
+                    await resultado.current.register(
+                        'jerryCantrell',
+                        'jerry.cantrell@aliceinchains.com',
+                        'senha-would'
+                    );
+                } catch (error: unknown) {
+                    expect(error).toBeDefined();
+                }
+            });
+
+            expect(resultado.current.error).toBe(mensagemErro);
         });
     });
 
     describe('Logout', () => {
-        it('should logout successfully', async () => {
-            const mockUser = {
+        it('deve realizar logout com sucesso', async () => {
+            const usuarioMock = {
                 id: '1',
-                username: 'testuser',
-                email: 'test@example.com',
-                experienceLevel: 'beginner',
-                createdAt: '2024-01-01',
-                updatedAt: '2024-01-01',
+                username: 'layneStaley',
+                email: 'layne.staley@grunge.com',
+                experienceLevel: 'iniciante',
+                createdAt: '1990-08-21',
+                updatedAt: '1992-09-29',
             };
 
-            localStorage.setItem('accessToken', 'test-token');
-            localStorage.setItem('refreshToken', 'refresh-token');
+            vi.mocked(apiService.apiService.login).mockResolvedValueOnce(
+                {
+                    data: {
+                        user: usuarioMock,
+                        accessToken: 'token-black-gives-way-to-blue',
+                        refreshToken: 'token-unplugged-refresh',
+                    },
+                } as unknown as LoginResolved
+            );
 
-            vi.mocked(apiService.apiService.logout).mockResolvedValueOnce({} as any);
+            vi.mocked(apiService.apiService.logout).mockResolvedValueOnce(
+                {} as unknown as LogoutResolved
+            );
 
-            const { result } = renderHook(() => useAuth());
+            const { result: resultado } = renderHookWithProviders(() => useAuth());
 
-            // Set user manually for this test
             await act(async () => {
-                result.current.user = mockUser;
+                await resultado.current.login(
+                    'layne.staley@grunge.com',
+                    'senha-nutshell'
+                );
             });
 
+            expect(resultado.current.user).toEqual(usuarioMock);
+            expect(resultado.current.isAuthenticated).toBe(true);
+            expect(localStorage.getItem('accessToken')).toBe(
+                'token-black-gives-way-to-blue'
+            );
+            expect(localStorage.getItem('refreshToken')).toBe(
+                'token-unplugged-refresh'
+            );
+
             await act(async () => {
-                await result.current.logout();
+                await resultado.current.logout();
             });
 
             expect(localStorage.getItem('accessToken')).toBeNull();
             expect(localStorage.getItem('refreshToken')).toBeNull();
-            expect(result.current.user).toBeNull();
-            expect(result.current.isAuthenticated).toBe(false);
+            expect(resultado.current.user).toBeNull();
+            expect(resultado.current.isAuthenticated).toBe(false);
         });
 
-        it('should handle logout error gracefully', async () => {
-            localStorage.setItem('accessToken', 'test-token');
+        it('deve tratar erro de logout graciosamente', async () => {
+            localStorage.setItem('accessToken', 'token-unplugged');
 
             vi.mocked(apiService.apiService.logout).mockRejectedValueOnce(
-                new Error('Network error')
+                new Error('Erro de rede em "MTV Unplugged"')
             );
 
-            const { result } = renderHook(() => useAuth());
+            const { result: resultado } = renderHookWithProviders(() => useAuth());
 
             await act(async () => {
-                await result.current.logout();
+                await resultado.current.logout();
             });
 
-            // Should still clear tokens even if logout fails
             expect(localStorage.getItem('accessToken')).toBeNull();
-            expect(result.current.user).toBeNull();
+            expect(resultado.current.user).toBeNull();
         });
     });
 
-    describe('Loading State', () => {
-        it('should set loading to false after login', async () => {
-            vi.mocked(apiService.apiService.login).mockResolvedValueOnce({
-                data: {
-                    user: {
-                        id: '1',
-                        username: 'testuser',
-                        email: 'test@example.com',
-                        experienceLevel: 'beginner',
-                        createdAt: '2024-01-01',
-                        updatedAt: '2024-01-01',
+    describe('Estado de Carregamento', () => {
+        it('deve definir loading como false após login', async () => {
+            vi.mocked(apiService.apiService.login).mockResolvedValueOnce(
+                {
+                    data: {
+                        user: {
+                            id: '3',
+                            username: 'seanKinney',
+                            email: 'sean.kinney@aliceinchains.com',
+                            experienceLevel: 'avancado',
+                            createdAt: '1990-08-21',
+                            updatedAt: '1995-11-07',
+                        },
+                        accessToken: 'token-sean-kinney-access',
                     },
-                    accessToken: 'access-token',
-                },
-            } as any);
+                } as unknown as LoginResolved
+            );
 
-            const { result } = renderHook(() => useAuth());
+            const { result: resultado } = renderHookWithProviders(() => useAuth());
 
             await act(async () => {
-                await result.current.login('test@example.com', 'password');
+                await resultado.current.login(
+                    'sean.kinney@aliceinchains.com',
+                    'senha-them-bones'
+                );
             });
 
-            expect(result.current.loading).toBe(false);
+            expect(resultado.current.loading).toBe(false);
         });
     });
 });

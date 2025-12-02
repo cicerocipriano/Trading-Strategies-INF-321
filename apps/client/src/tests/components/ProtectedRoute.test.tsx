@@ -1,52 +1,61 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import { renderWithProviders } from '../test-utils';
 import { BrowserRouter } from 'react-router-dom';
 
-// Mock useAuth hook
 vi.mock('@/hooks/useAuth', () => ({
     useAuth: vi.fn(),
 }));
 
 import { useAuth } from '@/hooks/useAuth';
 
-const mockUseAuth = vi.mocked(useAuth);
+type UseAuthReturn = ReturnType<typeof useAuth>;
 
-describe('ProtectedRoute', () => {
-    const TestComponent = () => <div>Protected Content</div>;
+const useAuthMockado = vi.mocked(useAuth);
+
+describe('Componente ProtectedRoute', () => {
+    const ComponenteDeTeste = () => <div>Conteúdo Protegido - Ten</div>;
 
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
-    describe('Authenticated User', () => {
-        it('should render component when user is authenticated', async () => {
-            mockUseAuth.mockReturnValue({
-                user: { id: '1', username: 'testuser', email: 'test@example.com' },
+    describe('Usuário Autenticado', () => {
+        it('deve renderizar o componente quando o usuário estiver autenticado', async () => {
+            useAuthMockado.mockReturnValue({
+                user: {
+                    id: '1',
+                    username: 'eddieVedder',
+                    email: 'eddie.vedder@pearljam.com',
+                },
                 isAuthenticated: true,
                 loading: false,
                 error: null,
                 login: vi.fn(),
                 register: vi.fn(),
                 logout: vi.fn(),
-            } as any);
+            } as unknown as UseAuthReturn);
 
             renderWithProviders(
                 <BrowserRouter>
-                    <ProtectedRoute component={TestComponent} />
+                    <ProtectedRoute isAuthenticated={useAuthMockado().isAuthenticated}>
+                        <ComponenteDeTeste />
+                    </ProtectedRoute>
                 </BrowserRouter>
             );
 
             await waitFor(() => {
-                expect(screen.getByText('Protected Content')).toBeInTheDocument();
+                expect(
+                    screen.getByText('Conteúdo Protegido - Ten')
+                ).toBeInTheDocument();
             });
         });
     });
 
-    describe('Unauthenticated User', () => {
-        it('should redirect to login when user is not authenticated', async () => {
-            mockUseAuth.mockReturnValue({
+    describe('Usuário Não Autenticado', () => {
+        it('deve redirecionar para login quando o usuário não estiver autenticado', async () => {
+            useAuthMockado.mockReturnValue({
                 user: null,
                 isAuthenticated: false,
                 loading: false,
@@ -54,23 +63,27 @@ describe('ProtectedRoute', () => {
                 login: vi.fn(),
                 register: vi.fn(),
                 logout: vi.fn(),
-            } as any);
+            } as unknown as UseAuthReturn);
 
-            const { container } = renderWithProviders(
+            renderWithProviders(
                 <BrowserRouter>
-                    <ProtectedRoute component={TestComponent} />
+                    <ProtectedRoute isAuthenticated={useAuthMockado().isAuthenticated}>
+                        <ComponenteDeTeste />
+                    </ProtectedRoute>
                 </BrowserRouter>
             );
 
             await waitFor(() => {
-                expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
+                expect(
+                    screen.queryByText('Conteúdo Protegido - Ten')
+                ).not.toBeInTheDocument();
             });
         });
     });
 
-    describe('Loading State', () => {
-        it('should show loading state while checking authentication', () => {
-            mockUseAuth.mockReturnValue({
+    describe('Estado de Carregamento', () => {
+        it('deve ocultar o conteúdo enquanto verifica autenticação', () => {
+            useAuthMockado.mockReturnValue({
                 user: null,
                 isAuthenticated: false,
                 loading: true,
@@ -78,89 +91,112 @@ describe('ProtectedRoute', () => {
                 login: vi.fn(),
                 register: vi.fn(),
                 logout: vi.fn(),
-            } as any);
+            } as unknown as UseAuthReturn);
 
             renderWithProviders(
                 <BrowserRouter>
-                    <ProtectedRoute component={TestComponent} />
+                    <ProtectedRoute isAuthenticated={useAuthMockado().isAuthenticated}>
+                        <ComponenteDeTeste />
+                    </ProtectedRoute>
                 </BrowserRouter>
             );
 
-            // Should not show protected content while loading
-            expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
+            expect(
+                screen.queryByText('Conteúdo Protegido - Ten')
+            ).not.toBeInTheDocument();
         });
 
-        it('should render component after loading completes for authenticated user', async () => {
-            mockUseAuth.mockReturnValue({
-                user: { id: '1', username: 'testuser', email: 'test@example.com' },
+        it('deve renderizar o componente após o carregamento para usuário autenticado', async () => {
+            useAuthMockado.mockReturnValue({
+                user: {
+                    id: '1',
+                    username: 'stoneGossard',
+                    email: 'stone.gossard@pearljam.com',
+                },
                 isAuthenticated: true,
                 loading: false,
                 error: null,
                 login: vi.fn(),
                 register: vi.fn(),
                 logout: vi.fn(),
-            } as any);
+            } as unknown as UseAuthReturn);
 
             renderWithProviders(
                 <BrowserRouter>
-                    <ProtectedRoute component={TestComponent} />
+                    <ProtectedRoute isAuthenticated={useAuthMockado().isAuthenticated}>
+                        <ComponenteDeTeste />
+                    </ProtectedRoute>
                 </BrowserRouter>
             );
 
             await waitFor(() => {
-                expect(screen.getByText('Protected Content')).toBeInTheDocument();
+                expect(
+                    screen.getByText('Conteúdo Protegido - Ten')
+                ).toBeInTheDocument();
             });
         });
     });
 
-    describe('Error Handling', () => {
-        it('should handle authentication error gracefully', async () => {
-            mockUseAuth.mockReturnValue({
+    describe('Tratamento de Erros', () => {
+        it('deve tratar erro de autenticação', async () => {
+            useAuthMockado.mockReturnValue({
                 user: null,
                 isAuthenticated: false,
                 loading: false,
-                error: 'Authentication failed',
+                error: 'Falha de autenticação no show de "Alive"',
                 login: vi.fn(),
                 register: vi.fn(),
                 logout: vi.fn(),
-            } as any);
+            } as unknown as UseAuthReturn);
 
             renderWithProviders(
                 <BrowserRouter>
-                    <ProtectedRoute component={TestComponent} />
+                    <ProtectedRoute isAuthenticated={useAuthMockado().isAuthenticated}>
+                        <ComponenteDeTeste />
+                    </ProtectedRoute>
                 </BrowserRouter>
             );
 
             await waitFor(() => {
-                expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
+                expect(
+                    screen.queryByText('Conteúdo Protegido - Ten')
+                ).not.toBeInTheDocument();
             });
         });
     });
 
-    describe('Component Props', () => {
-        it('should pass props to protected component', async () => {
-            mockUseAuth.mockReturnValue({
-                user: { id: '1', username: 'testuser', email: 'test@example.com' },
+    describe('Propriedades do Componente', () => {
+        it('deve repassar as propriedades corretamente para o componente protegido', async () => {
+            useAuthMockado.mockReturnValue({
+                user: {
+                    id: '1',
+                    username: 'mikeMcCready',
+                    email: 'mike.mccready@pearljam.com',
+                },
                 isAuthenticated: true,
                 loading: false,
                 error: null,
                 login: vi.fn(),
                 register: vi.fn(),
                 logout: vi.fn(),
-            } as any);
+            } as unknown as UseAuthReturn);
 
-            const ComponentWithProps = ({ title }: { title: string }) => (
-                <div>{title}</div>
+            const ComponenteComProps = ({ titulo }: { titulo: string }) => (
+                <div>{titulo}</div>
             );
 
             renderWithProviders(
                 <BrowserRouter>
-                    <ProtectedRoute component={ComponentWithProps} title="Test Title" />
+                    <ProtectedRoute isAuthenticated={useAuthMockado().isAuthenticated}>
+                        <ComponenteComProps titulo="Título de Teste - Even Flow" />
+                    </ProtectedRoute>
                 </BrowserRouter>
             );
 
             await waitFor(() => {
-                expect(screen.getByText('Test Title')).toBeInTheDocument();
+                expect(
+                    screen.getByText('Título de Teste - Even Flow')
+                ).toBeInTheDocument();
             });
         });
     });

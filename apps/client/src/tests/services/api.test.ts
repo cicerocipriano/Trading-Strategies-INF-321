@@ -37,8 +37,9 @@ describe('API Service', () => {
 
             try {
                 await axios.get('/api/user');
-            } catch (error: any) {
-                expect(error.response.status).toBe(401);
+            } catch (error: unknown) {
+                const err = error as { response?: { status: number; data?: unknown } };
+                expect(err.response?.status).toBe(401);
             }
         });
     });
@@ -50,8 +51,9 @@ describe('API Service', () => {
 
             try {
                 await axios.get('/api/strategies');
-            } catch (err: any) {
-                expect(err.message).toBe('Network error');
+            } catch (err: unknown) {
+                const networkError = err as Error;
+                expect(networkError.message).toBe('Network error');
             }
         });
 
@@ -67,8 +69,9 @@ describe('API Service', () => {
 
             try {
                 await axios.get('/api/strategies');
-            } catch (err: any) {
-                expect(err.response.status).toBe(500);
+            } catch (err: unknown) {
+                const serverError = err as { response?: { status: number } };
+                expect(serverError.response?.status).toBe(500);
             }
         });
 
@@ -90,9 +93,16 @@ describe('API Service', () => {
                     email: 'invalid',
                     password: 'password',
                 });
-            } catch (err: any) {
-                expect(err.response.status).toBe(400);
-                expect(err.response.data.errors).toHaveProperty('email');
+            } catch (err: unknown) {
+                const validationError = err as {
+                    response?: {
+                        status: number;
+                        data: { errors: { email: string } };
+                    };
+                };
+
+                expect(validationError.response?.status).toBe(400);
+                expect(validationError.response?.data.errors).toHaveProperty('email');
             }
         });
     });
