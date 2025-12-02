@@ -93,9 +93,14 @@ export const useStrategy = (id: string) => {
             }
         };
 
-        if (id) {
-            fetchStrategy();
+        if (!id) {
+            setLoading(false);
+            setStrategy(null);
+            setError(null);
+            return;
         }
+
+        fetchStrategy();
     }, [id]);
 
     return {
