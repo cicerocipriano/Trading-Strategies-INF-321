@@ -22,10 +22,12 @@
             "@/*": [
                 "src/*"
             ]
-        }
+        },
+        "types": ["vite/client", "node"]
     },
     "include": [
-        "src"
+        "src", 
+        "src/vite-env.d.ts"
     ],
     "references": [
         {
