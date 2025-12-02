@@ -7,7 +7,7 @@
     "dev:server": "nest start --watch --config nest-cli.json",
     "dev:client": "vite --config apps/client/vite.config.ts",
     "build": "pnpm run build:client && pnpm run build:server",
-    "build:server": "tsc -p tsconfig.json",
+    "build:server": "tsc -p apps/server/tsconfig.json",
     "build:client": "vite build --config apps/client/vite.config.ts",
     "db:generate": "drizzle-kit generate --config packages/drizzle.config.ts",
     "db:migrate": "drizzle-kit migrate --config packages/drizzle.config.ts",
