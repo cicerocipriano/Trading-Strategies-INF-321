@@ -83,6 +83,17 @@ module.exports = async function createQltySmellIssues({
                     }
                 }
 
+                // Ignora erros de configuração de ambiente
+                if (
+                    ruleId === 'eslint:' &&
+                    messageText.toLowerCase().includes('parsing error')
+                ) {
+                    core.info(
+                        `Ignorando erro de parsing do ESLint em Qlty (ruleId=eslint:, mensagem de parsing): ${messageText}`
+                    );
+                    continue;
+                }
+
                 const firstLocation =
                     (result.locations && result.locations[0]) || {};
                 const physicalLocation = firstLocation.physicalLocation || {};
@@ -92,7 +103,12 @@ module.exports = async function createQltySmellIssues({
                 const uri = artifactLocation.uri || 'UNKNOWN_FILE';
                 const line = region.startLine || 1;
 
-                const fileUri = `${prefix}/${uri}`;
+                let fileUri;
+                if (uri.startsWith(`${prefix}/`)) {
+                    fileUri = uri;
+                } else {
+                    fileUri = `${prefix}/${uri}`;
+                }
 
                 const tags = ruleTagsMap.get(ruleId) || [];
                 const tagsJoined = tags.join(',').toLowerCase();
@@ -111,22 +127,22 @@ module.exports = async function createQltySmellIssues({
                 const title = `[Qlty ${type}] ${ruleId} em ${fileUri}`;
 
                 const body = `
-                            **Detalhes do Débito Técnico (${prefix})**
+**Detalhes do Débito Técnico (${prefix})**
 
-                            - **Tipo (Sonar-style):** ${type}
-                            - **Regra:** \`${ruleId}\`
-                            - **Arquivo:** \`${fileUri}\`
-                            - **Linha:** ${line}
-                            - **Nível (SARIF):** ${level}
-                            - **Tags (QLTY/SARIF):** ${tags.join(', ') || '(nenhuma)'}
+- **Tipo (Sonar-style):** ${type}
+- **Regra:** \`${ruleId}\`
+- **Arquivo:** \`${fileUri}\`
+- **Linha:** ${line}
+- **Nível (SARIF):** ${level}
+- **Tags (QLTY/SARIF):** ${tags.join(', ') || '(nenhuma)'}
 
-                            ---
+---
 
-                            **Mensagem do Qlty:**
-                            ${messageText}
+**Mensagem do Qlty:**
+${messageText}
 
-                            Criado automaticamente pelo pipeline de CI (job \`qlty-smells\`).
-                            `.trim();
+Criado automaticamente pelo pipeline de CI (job \`qlty-smells\`).
+`.trim();
 
                 const labels = ['Débito-técnico', ...extraLabels];
 

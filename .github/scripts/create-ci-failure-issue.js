@@ -44,16 +44,16 @@ module.exports = async function createCiFailureIssue({ github, context, core }) 
 
     const issueTitle = `[CI Falhou] Workflow "${context.workflow}" – Jobs: ${failedNamesStr}`;
     const issueBody = `O workflow de CI falhou.
-                    **Detalhes da Falha**
-                    - **Workflow:** \`${context.workflow}\`
-                    - **Run ID:** \`${context.runId}\`
-                    - **Commit:** \`${context.sha}\`
-                    - **Autor do commit:** \`${workflowRun.head_commit?.author?.name ?? 'desconhecido'}\`
-                    - **Mensagem do commit:** \`${workflowRun.head_commit?.message ?? 'N/A'}\`
-                    - **Branch:** \`${context.ref}\`
-                    - **Jobs falhos:** ${failedNamesStr}
-                    [Clique aqui para ver o log completo do Workflow](${workflowRun.html_url})
-                    Por favor, investigue a causa da falha e corrija o problema.`;
+**Detalhes da Falha**
+- **Workflow:** \`${context.workflow}\`
+- **Run ID:** \`${context.runId}\`
+- **Commit:** \`${context.sha}\`
+- **Autor do commit:** \`${workflowRun.head_commit?.author?.name ?? 'desconhecido'}\`
+- **Mensagem do commit:** \`${workflowRun.head_commit?.message ?? 'N/A'}\`
+- **Branch:** \`${context.ref}\`
+- **Jobs falhos:** ${failedNamesStr}
+[Clique aqui para ver o log completo do Workflow](${workflowRun.html_url})
+Por favor, investigue a causa da falha e corrija o problema.`;
 
     // 3. Evitar issues duplicadas (mesmo título ainda aberta)
     const existingIssues = await github.paginate(

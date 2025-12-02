@@ -37,19 +37,19 @@ module.exports = async function createSmellIssues({ github, context, core }) {
             const title = `[Code Smell: Complexity] ${filePath}:${message.line}`;
 
             const body = `
-                        **Tipo (Sonar-style):** CODE_SMELL
+**Tipo (Sonar-style):** CODE_SMELL
 
-                        Foi detectada uma alta complexidade ciclomática, indicando um possível Code Smell.
+Foi detectada uma alta complexidade ciclomática, indicando um possível Code Smell.
 
-                        **Detalhes:**
-                        - **Arquivo:** \`${filePath}\`
-                        - **Linha:** ${message.line}
-                        - **Coluna:** ${message.column}
-                        - **Mensagem do ESLint:** ${message.message}
-                        - **Regra:** \`${message.ruleId}\`
+**Detalhes:**
+- **Arquivo:** \`${filePath}\`
+- **Linha:** ${message.line}
+- **Coluna:** ${message.column}
+- **Mensagem do ESLint:** ${message.message}
+- **Regra:** \`${message.ruleId}\`
 
-                        Sugestão: refatore esta função/método para reduzir a complexidade e distribuir melhor as responsabilidades.
-                        `.trim();
+Sugestão: refatore esta função/método para reduzir a complexidade e distribuir melhor as responsabilidades.
+`.trim();
 
             issuesToCreate.push({
                 title,
