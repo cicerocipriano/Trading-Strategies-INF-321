@@ -116,7 +116,10 @@ describe('Componente ProtectedRoute', () => {
                     id: '1',
                     username: 'stoneGossard',
                     email: 'stone.gossard@pearljam.com',
-                } as any,
+                    experienceLevel: 'NOVICE',
+                    createdAt: '2025-01-01T00:00:00.000Z',
+                    updatedAt: '2025-01-01T00:00:00.000Z',
+                },
                 isAuthenticated: true,
                 loading: false,
             });
