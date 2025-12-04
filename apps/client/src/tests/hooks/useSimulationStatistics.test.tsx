@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import * as apiService from '@/services/api';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import { createAuthMock, type UseAuthReturn } from '../mocks/authMocks';
+import { createAuthMock } from '../mocks/authMocks';
 
 vi.mock('@/hooks/useAuth', () => ({
     useAuth: vi.fn(),

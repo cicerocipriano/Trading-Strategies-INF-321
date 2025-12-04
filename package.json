@@ -142,7 +142,8 @@
     "overrides": {
       "esbuild": ">=0.25.0",
       "express": "5.2.0",
-      "body-parser": "2.2.1"
+      "body-parser": "2.2.1",
+      "jws@<3.2.3": ">=3.2.3"
     }
   }
 }
