@@ -20,23 +20,24 @@ async function fetchSimulationStatistics(userId: string): Promise<SimulationStat
     return response.data as SimulationStatistics;
 }
 
+const defaultStatistics: SimulationStatistics = {
+    totalSimulations: 0,
+    profitableSimulations: 0,
+    losingSimulations: 0,
+    winRate: '0%',
+    avgReturn: '0%',
+    simulatedCapital: 0,
+};
+
 export function useSimulationStatistics() {
     const { user } = useAuth();
     const userId = (user as AuthUserWithId | null | undefined)?.id;
 
     return useQuery<SimulationStatistics>({
         queryKey: ['simulation-statistics', userId],
-        enabled: !!userId,
         queryFn: () => {
             if (!userId) {
-                return Promise.resolve<SimulationStatistics>({
-                    totalSimulations: 0,
-                    profitableSimulations: 0,
-                    losingSimulations: 0,
-                    winRate: '0%',
-                    avgReturn: '0%',
-                    simulatedCapital: 0,
-                });
+                return Promise.resolve(defaultStatistics);
             }
 
             return fetchSimulationStatistics(userId);

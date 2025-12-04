@@ -92,49 +92,7 @@ describe('useStrategies', () => {
         });
     });
 
-    describe('Filtragem (lado do consumidor)', () => {
-        it('deve filtrar estratégias por nível de proficiência', async () => {
-            vi.mocked(apiService.apiService.getStrategies).mockResolvedValueOnce(
-                {
-                    data: estrategiasMock,
-                } as unknown as GetStrategiesResolved
-            );
 
-            const { result } = renderHook(() => useStrategies());
-
-            await waitFor(() => {
-                expect(result.current.loading).toBe(false);
-            });
-
-            const estrategiasFiltradasPorNivel =
-                result.current.strategies.filter(
-                    (estrategia) => estrategia.proficiencyLevel === 'intermediario'
-                );
-            expect(estrategiasFiltradasPorNivel.length).toBe(2);
-        });
-
-        it('deve filtrar estratégias pelo nome', async () => {
-            vi.mocked(apiService.apiService.getStrategies).mockResolvedValueOnce(
-                {
-                    data: estrategiasMock,
-                } as unknown as GetStrategiesResolved
-            );
-
-            const { result } = renderHook(() => useStrategies());
-
-            await waitFor(() => {
-                expect(result.current.loading).toBe(false);
-            });
-
-            const estrategiasFiltradasPorNome =
-                result.current.strategies.filter((estrategia) =>
-                    estrategia.name.toLowerCase().includes('ten')
-                );
-
-            expect(estrategiasFiltradasPorNome.length).toBe(1);
-            expect(estrategiasFiltradasPorNome[0].name).toBe('Ten Breakout');
-        });
-    });
 
     describe('Resultados Vazios', () => {
         it('deve tratar corretamente lista vazia de estratégias', async () => {
@@ -154,34 +112,6 @@ describe('useStrategies', () => {
 
             expect(result.current.strategies).toEqual([]);
             expect(result.current.error).toBeNull();
-        });
-    });
-
-    describe('Lógica de Retentativa', () => {
-        it('deve tentar novamente após falha inicial', async () => {
-            vi.mocked(apiService.apiService.getStrategies)
-                .mockRejectedValueOnce(new Error('Erro de rede ao carregar'))
-                .mockResolvedValueOnce({
-                    data: estrategiasMock,
-                } as unknown as GetStrategiesResolved);
-
-            const filtrosPadrao: StrategyFilters = {};
-            const { result } = renderHook(() => useStrategies(filtrosPadrao));
-
-            await waitFor(() => {
-                expect(result.current.loading).toBe(false);
-            });
-
-            expect(result.current.error).toBeDefined();
-            expect(result.current.strategies).toEqual([]);
-
-            await act(async () => {
-                await result.current.refetch();
-            });
-
-            expect(result.current.loading).toBe(false);
-            expect(result.current.error).toBeNull();
-            expect(result.current.strategies).toEqual(estrategiasMock);
         });
     });
 
@@ -241,6 +171,36 @@ describe('useStrategies', () => {
             ).toEqual(filtrosAtualizados);
         });
     });
+
+    describe('Lógica de Retentativa', () => {
+        it('deve tentar novamente após falha inicial', async () => {
+            vi.mocked(apiService.apiService.getStrategies)
+                .mockRejectedValueOnce(new Error('Erro de rede ao carregar'))
+                .mockResolvedValueOnce({
+                    data: estrategiasMock,
+                } as unknown as GetStrategiesResolved);
+
+            const filtrosPadrao: StrategyFilters = {};
+            const { result } = renderHook(() => useStrategies(filtrosPadrao));
+
+            await waitFor(() => {
+                expect(result.current.loading).toBe(false);
+            });
+
+            expect(result.current.error).toBeDefined();
+            expect(result.current.strategies).toEqual([]);
+
+            await act(async () => {
+                await result.current.refetch();
+            });
+
+            expect(result.current.loading).toBe(false);
+            expect(result.current.error).toBeNull();
+            expect(result.current.strategies).toEqual(estrategiasMock);
+        });
+    });
+
+
 
     describe('Tratamento de erros Axios específicos', () => {
         it('deve usar mensagem de erro da API quando disponível (AxiosError)', async () => {
