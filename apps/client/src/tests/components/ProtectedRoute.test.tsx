@@ -8,6 +8,7 @@ vi.mock('@/hooks/useAuth', () => ({
     useAuth: vi.fn(),
 }));
 
+import { createAuthMock } from '../mocks/authMocks';
 import { useAuth } from '@/hooks/useAuth';
 
 type UseAuthReturn = ReturnType<typeof useAuth>;
@@ -15,20 +16,6 @@ const useAuthMockado = vi.mocked(useAuth);
 
 describe('Componente ProtectedRoute', () => {
     const ComponenteDeTeste = () => <div>Conteúdo Protegido</div>;
-
-    const createAuthMock = (
-        overrides: Partial<UseAuthReturn> = {}
-    ): UseAuthReturn =>
-    ({
-        user: null,
-        isAuthenticated: false,
-        loading: false,
-        error: null,
-        login: vi.fn(),
-        register: vi.fn(),
-        logout: vi.fn(),
-        ...overrides,
-    } as unknown as UseAuthReturn);
 
     const renderProtected = (
         authOverrides: Partial<UseAuthReturn> = {},
