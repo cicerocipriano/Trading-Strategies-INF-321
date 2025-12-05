@@ -176,6 +176,11 @@ export const simulationLegs = pgTable('simulation_legs', {
     instrumentType: instrumentTypeEnum('instrument_type').notNull(),
     action: actionEnum('action').notNull(),
     quantity: integer('quantity').notNull(),
+    strikePrice: numeric('strike_price', {
+        precision: 18,
+        scale: 2,
+    }),
+    expiryDate: date('expiry_date', { mode: 'date' }),
     entryPrice: numeric('entry_price', { precision: 18, scale: 2 }).notNull(),
     exitPrice: numeric('exit_price', { precision: 18, scale: 2 }),
     entryDate: timestamp('entry_date', { withTimezone: false }).notNull(),
@@ -213,9 +218,9 @@ export type SelectSimulationLeg = typeof simulationLegs.$inferSelect;
 export type SelectExternalAccount = typeof externalAccounts.$inferSelect;
 
 // Exporta tipos de inserção - $inferInsert
-export type InsertUser           = typeof users.$inferInsert;
-export type InsertStrategy       = typeof strategies.$inferInsert;
-export type InsertStrategyLeg    = typeof strategyLegs.$inferInsert;
-export type InsertSimulation     = typeof simulations.$inferInsert;
-export type InsertSimulationLeg  = typeof simulationLegs.$inferInsert;
-export type InsertExternalAccount= typeof externalAccounts.$inferInsert;
+export type InsertUser = typeof users.$inferInsert;
+export type InsertStrategy = typeof strategies.$inferInsert;
+export type InsertStrategyLeg = typeof strategyLegs.$inferInsert;
+export type InsertSimulation = typeof simulations.$inferInsert;
+export type InsertSimulationLeg = typeof simulationLegs.$inferInsert;
+export type InsertExternalAccount = typeof externalAccounts.$inferInsert;
