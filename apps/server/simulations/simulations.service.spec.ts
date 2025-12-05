@@ -3,6 +3,9 @@
  */
 import { Test, TestingModule } from '@nestjs/testing';
 import { SimulationsService, PaginationOptions } from './simulations.service';
+import { SimulationEngineService } from '../market/simulation-engine.service';
+import { MarketService } from '../market/market.service';
+import { StrategyLegFactory } from '../strategies/strategy-leg.factory';
 import { NotFoundException } from '@nestjs/common';
 import { CreateSimulationDto } from './dto/create-simulation.dto';
 import { UpdateSimulationDto } from './dto/update-simulation.dto';
@@ -14,6 +17,22 @@ import * as schema from '../../../drizzle/schema';
 import { eq } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
 
+const mockSimulationEngineService = {
+    runBacktest: jest.fn().mockResolvedValue({
+        totalReturn: 0,
+        returnPercentage: 0,
+        maxDrawdown: 0,
+    }),
+};
+
+const mockMarketService = {
+    getQuoteHistory: jest.fn(),
+};
+
+const mockStrategyLegFactory = {
+    instantiateLegs: jest.fn().mockReturnValue([]),
+};
+
 describe('Simulações Testes Service', () => {
     let service: SimulationsService;
 
@@ -22,6 +41,8 @@ describe('Simulações Testes Service', () => {
     const usuarioId = '00000000-0000-0000-0000-000000000002';
     const estrategiaId = '00000000-0000-0000-0000-000000000003';
     const pernaId = '00000000-0000-0000-0000-000000000101';
+
+    const longCallStrategyId = '00000000-0000-0000-0000-000000000011';
 
     const mockUsuario = {
         id: usuarioId,
@@ -77,11 +98,27 @@ describe('Simulações Testes Service', () => {
     };
 
     beforeEach(async () => {
+        jest.clearAllMocks();
+
         await db.insert(schema.users).values(mockUsuario);
         await db.insert(schema.strategies).values(mockEstrategia);
 
         const module: TestingModule = await Test.createTestingModule({
-            providers: [SimulationsService],
+            providers: [
+                SimulationsService,
+                {
+                    provide: SimulationEngineService,
+                    useValue: mockSimulationEngineService,
+                },
+                {
+                    provide: MarketService,
+                    useValue: mockMarketService,
+                },
+                {
+                    provide: StrategyLegFactory,
+                    useValue: mockStrategyLegFactory,
+                },
+            ],
         }).compile();
 
         service = module.get<SimulationsService>(SimulationsService);
@@ -92,6 +129,7 @@ describe('Simulações Testes Service', () => {
         await db.delete(schema.simulations).where(eq(schema.simulations.userId, usuarioId));
         await db.delete(schema.users).where(eq(schema.users.id, usuarioId));
         await db.delete(schema.strategies).where(eq(schema.strategies.id, estrategiaId));
+        await db.delete(schema.strategies).where(eq(schema.strategies.id, longCallStrategyId));
     });
 
     describe('Obter simulações do usuário, getUserSimulations', () => {
@@ -559,6 +597,68 @@ describe('Simulações Testes Service', () => {
             const resultado = await service.getUserStatistics(usuarioId);
 
             expect(parseFloat(resultado.winRate)).toBeCloseTo(66.67, 1);
+        });
+    });
+
+    describe('Execução automática e mapeamento da estratégia', () => {
+        beforeEach(async () => {
+            const mockLongCallStrategy = {
+                ...mockEstrategia,
+                id: longCallStrategyId,
+                name: 'Long Call',
+            };
+
+            await db.insert(schema.strategies).values(mockLongCallStrategy);
+        });
+
+        it('Deve chamar o motor com executionType LONG_CALL para estratégia "Long Call" em período passado.', async () => {
+            const dto: CreateSimulationDto = {
+                userId: usuarioId,
+                strategyId: longCallStrategyId,
+                assetSymbol: 'PETR4',
+                simulationName: 'Simulação Long Call passada',
+                startDate: new Date('2024-01-01'),
+                endDate: new Date('2024-02-01'),
+                initialCapital: '10000.00',
+            };
+
+            await service.createSimulation(dto);
+
+            expect(mockSimulationEngineService.runBacktest).toHaveBeenCalled();
+
+            const lastCallIndex =
+                mockSimulationEngineService.runBacktest.mock.calls.length - 1;
+            const lastCallArgs =
+                mockSimulationEngineService.runBacktest.mock.calls[lastCallIndex];
+            const simulationArg = lastCallArgs[0] as any;
+
+            expect(simulationArg.strategyExecutionType).toBe('LONG_CALL');
+            expect(simulationArg.assetSymbol).toBe('PETR4');
+            expect(simulationArg.legs).toBeDefined();
+        });
+
+        it('Deve usar BUY_HOLD_STOCK como fallback quando a estratégia não for mapeada.', async () => {
+            const dto: CreateSimulationDto = {
+                userId: usuarioId,
+                strategyId: estrategiaId,
+                assetSymbol: 'PETR4',
+                simulationName: 'Simulação genérica passada',
+                startDate: new Date('2024-01-01'),
+                endDate: new Date('2024-02-01'),
+                initialCapital: '10000.00',
+            };
+
+            await service.createSimulation(dto);
+
+            expect(mockSimulationEngineService.runBacktest).toHaveBeenCalled();
+
+            const lastCallIndex =
+                mockSimulationEngineService.runBacktest.mock.calls.length - 1;
+            const lastCallArgs =
+                mockSimulationEngineService.runBacktest.mock.calls[lastCallIndex];
+            const simulationArg = lastCallArgs[0] as any;
+
+            expect(simulationArg.strategyExecutionType).toBe('BUY_HOLD_STOCK');
         });
     });
 });

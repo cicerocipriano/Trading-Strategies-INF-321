@@ -2,13 +2,33 @@
  * Serviço responsável por todas as operações relacionadas a simulações.
  * Implementa a lógica de negócio para CRUD, paginação e cálculos.
  */
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { db, SelectSimulation, SelectSimulationLeg } from '../db';
+import {
+    Injectable,
+    NotFoundException,
+    BadRequestException,
+    Logger,
+} from '@nestjs/common';
+
+import {
+    db,
+    SelectSimulation,
+    SelectSimulationLeg,
+    SelectStrategyLeg,
+    InsertSimulationLeg,
+} from '../db';
+
 import { eq, desc, asc } from 'drizzle-orm';
 import * as schema from '../../../drizzle/schema';
+
 import { CreateSimulationDto } from './dto/create-simulation.dto';
 import { UpdateSimulationDto } from './dto/update-simulation.dto';
 import { CreateSimulationLegDto } from './dto/create-simulation-leg.dto';
+
+import { SimulationEngineService } from '../market/simulation-engine.service';
+import { MarketService, BrapiHistoricalPrice } from '../market/market.service';
+import { StrategyExecutionType } from '../market/simulation-engine.types';
+import { StrategyLegFactory } from '../strategies/strategy-leg.factory';
+import { mapExecutionTypeFromStrategyName } from './strategy-execution.mapper';
 
 /**
  * Interface para opções de paginação
@@ -21,6 +41,14 @@ export interface PaginationOptions {
 
 @Injectable()
 export class SimulationsService {
+    private readonly logger = new Logger(SimulationsService.name);
+
+    constructor(
+        private readonly simulationEngine: SimulationEngineService,
+        private readonly marketService: MarketService,
+        private readonly strategyLegFactory: StrategyLegFactory,
+    ) { }
+
     /**
      * Obtém todas as simulações de um usuário com paginação
      */
@@ -32,7 +60,8 @@ export class SimulationsService {
             let query = db
                 .select()
                 .from(schema.simulations)
-                .where(eq(schema.simulations.userId, userId)).$dynamic();
+                .where(eq(schema.simulations.userId, userId))
+                .$dynamic();
 
             // Ordenação
             if (options?.orderBy === 'oldest') {
@@ -61,8 +90,11 @@ export class SimulationsService {
     }
 
     /**
-     * Obtém uma simulação por ID com suas pernas
-     */
+ * Obtém uma simulação por ID com suas pernas.
+ *
+ * Se a data de término já passou e o status ainda não for CONCLUDED,
+ * roda o backtest, atualiza e devolve a simulação concluída.
+ */
     async getSimulationById(id: string): Promise<
         SelectSimulation & { legs: SelectSimulationLeg[] }
     > {
@@ -74,15 +106,61 @@ export class SimulationsService {
                 .limit(1);
 
             if (!simulation) {
-                throw new NotFoundException(`Simulação com ID ${id} não encontrada`);
+                throw new NotFoundException(
+                    `Simulação com ID ${id} não encontrada`,
+                );
             }
 
+            // Carrega legs da simulação
             const legs = await db
                 .select()
                 .from(schema.simulationLegs)
                 .where(eq(schema.simulationLegs.simulationId, id));
 
-            return { ...simulation, legs };
+            // Carrega estratégia para mapear executionType
+            const [strategy] = await db
+                .select()
+                .from(schema.strategies)
+                .where(eq(schema.strategies.id, simulation.strategyId));
+
+            const executionType: StrategyExecutionType =
+                mapExecutionTypeFromStrategyName(strategy?.name);
+
+            const now = new Date();
+            const endDate =
+                simulation.endDate instanceof Date
+                    ? simulation.endDate
+                    : new Date(simulation.endDate as unknown as string);
+
+            let finalSimulation = simulation;
+
+            // Se já passou do fim e ainda não foi concluída, finaliza agora
+            if (endDate <= now && simulation.status !== 'CONCLUDED') {
+                const result = await this.simulationEngine.runBacktest({
+                    ...simulation,
+                    strategyExecutionType: executionType,
+                    legs,
+                });
+
+                const [updated] = await db
+                    .update(schema.simulations)
+                    .set({
+                        totalReturn: result.totalReturn.toFixed(2),
+                        returnPercentage: result.returnPercentage.toFixed(4),
+                        maxDrawdown: result.maxDrawdown.toFixed(4),
+                        status: 'CONCLUDED',
+                    })
+                    .where(eq(schema.simulations.id, simulation.id))
+                    .returning();
+
+                this.logger.log(
+                    `[SimulationsService] Simulação ${simulation.id} concluída sob demanda no getSimulationById`,
+                );
+
+                finalSimulation = updated;
+            }
+
+            return { ...finalSimulation, legs };
         } catch (error) {
             if (error instanceof NotFoundException) {
                 throw error;
@@ -93,22 +171,144 @@ export class SimulationsService {
     }
 
     /**
-     * Cria uma nova simulação
+     * Cria uma nova simulação.
+     *
+     * - Se a data de término já passou, roda o backtest imediatamente
+     *   e salva o resultado com status CONCLUDED.
+     * - Se a data de término for futura, cria como IN_PROGRESS.
      */
-    async createSimulation(
-        createSimulationDto: CreateSimulationDto,
-    ): Promise<SelectSimulation> {
+    async createSimulation(dto: CreateSimulationDto) {
         try {
-
-            const [simulation] = await db
+            // 0) Insere a simulação como IN_PROGRESS
+            const [inserted] = await db
                 .insert(schema.simulations)
-                .values(createSimulationDto)
+                .values({
+                    userId: dto.userId,
+                    strategyId: dto.strategyId,
+                    assetSymbol: dto.assetSymbol,
+                    simulationName: dto.simulationName,
+                    startDate: dto.startDate,
+                    endDate: dto.endDate,
+                    initialCapital: dto.initialCapital,
+                    status: 'IN_PROGRESS',
+                })
                 .returning();
 
-            console.log(`[SimulationsService] Simulação criada: ${simulation.id}`);
-            return simulation;
+            if (!inserted) {
+                throw new BadRequestException(
+                    'Falha ao inserir simulação no banco',
+                );
+            }
+
+            // 1) Busca estratégia
+            const [strategy] = await db
+                .select()
+                .from(schema.strategies)
+                .where(eq(schema.strategies.id, inserted.strategyId));
+
+            if (!strategy) {
+                this.logger.warn(
+                    `[SimulationsService] Estratégia ${inserted.strategyId} não encontrada. Usando BUY_HOLD_STOCK como padrão.`,
+                );
+            }
+
+            // 2) Busca legs de estratégia (templates)
+            const strategyLegTemplates: SelectStrategyLeg[] = await db
+                .select()
+                .from(schema.strategyLegs)
+                .where(eq(schema.strategyLegs.strategyId, inserted.strategyId));
+
+            // 3) Instancia as simulation_legs com base nos strategy_legs via factory
+            let simulationLegs: SelectSimulationLeg[] = [];
+
+            if (strategyLegTemplates.length > 0) {
+                const startDate = new Date(dto.startDate);
+                const endDate = new Date(dto.endDate);
+
+                const underlyingPriceAtStart =
+                    await this.getUnderlyingPriceAtStart(
+                        inserted.assetSymbol,
+                        startDate,
+                        endDate,
+                    );
+
+                if (underlyingPriceAtStart !== null) {
+                    const legInserts: InsertSimulationLeg[] =
+                        this.strategyLegFactory.instantiateLegs({
+                            templates: strategyLegTemplates,
+                            simulation: {
+                                id: inserted.id,
+                                initialCapital: Number(
+                                    inserted.initialCapital?.toString() ?? '0',
+                                ),
+                                startDate,
+                                endDate,
+                                assetSymbol: inserted.assetSymbol,
+                            },
+                            underlyingPriceAtStart,
+                        });
+
+                    if (legInserts.length > 0) {
+                        simulationLegs = await db
+                            .insert(schema.simulationLegs)
+                            .values(legInserts)
+                            .returning();
+                    }
+                } else {
+                    this.logger.warn(
+                        `[SimulationsService] Não foi possível obter preço inicial para ${inserted.assetSymbol}. Nenhuma SimulationLeg gerada.`,
+                    );
+                }
+            }
+
+            // 4) Determina o executionType (por enquanto via nome)
+            const executionType: StrategyExecutionType =
+                mapExecutionTypeFromStrategyName(strategy?.name);
+
+            // 5) Verifica se o período já terminou
+            const now = new Date();
+            const endDate = new Date(dto.endDate);
+            const isPastPeriod = endDate.getTime() <= now.getTime();
+
+            if (!isPastPeriod) {
+                // Período futuro → deixa IN_PROGRESS e retorna a simulação com legs
+                this.logger.log(
+                    `[SimulationsService] Simulação ${inserted.id} criada como IN_PROGRESS (período futuro).`,
+                );
+                return {
+                    ...inserted,
+                    legs: simulationLegs,
+                };
+            }
+
+            // 6) Período passado → roda o backtest imediatamente
+            const backtest = await this.simulationEngine.runBacktest({
+                ...inserted,
+                strategyExecutionType: executionType,
+                legs: simulationLegs,
+            });
+
+            const [updated] = await db
+                .update(schema.simulations)
+                .set({
+                    totalReturn: backtest.totalReturn.toFixed(2),
+                    returnPercentage: backtest.returnPercentage.toFixed(4),
+                    maxDrawdown: backtest.maxDrawdown.toFixed(4),
+                    status: 'CONCLUDED',
+                })
+                .where(eq(schema.simulations.id, inserted.id))
+                .returning();
+
+            this.logger.log(
+                `[SimulationsService] Simulação ${inserted.id} criada e concluída imediatamente (período passado)`,
+            );
+
+            return updated;
         } catch (error) {
-            console.error('[SimulationsService] Erro ao criar simulação:', error);
+            this.logger.error(
+                '[SimulationsService] Erro ao criar simulação',
+                error instanceof Error ? error.stack : String(error),
+            );
             throw new BadRequestException('Erro ao criar simulação');
         }
     }
@@ -354,15 +554,99 @@ export class SimulationsService {
         }
     }
 
-    private capitalAgregado(simulations: { id: string; createdAt: Date; strategyId: string; userId: string; assetSymbol: string; simulationName: string; startDate: Date; endDate: Date; initialCapital: string; totalReturn: string | null; returnPercentage: string | null; maxDrawdown: string | null; }[]) {
-        return simulations.reduce((acumulador, simulacao: any) => {
-            const inicial = parseFloat(simulacao.initialCapital?.toString() ?? '0');
-            const totalReturn = parseFloat(simulacao.totalReturn?.toString() ?? '0');
-            acumulador.totalInitial += inicial;
-            acumulador.totalReturn += totalReturn;
-            return acumulador;
-        },
-            { totalInitial: 0, totalReturn: 0 }
+    private capitalAgregado(
+        simulations: {
+            id: string;
+            createdAt: Date;
+            strategyId: string;
+            userId: string;
+            assetSymbol: string;
+            simulationName: string;
+            startDate: Date;
+            endDate: Date;
+            initialCapital: string;
+            totalReturn: string | null;
+            returnPercentage: string | null;
+            maxDrawdown: string | null;
+        }[],
+    ) {
+        return simulations.reduce(
+            (acumulador, simulacao: any) => {
+                const inicial = parseFloat(simulacao.initialCapital?.toString() ?? '0');
+                const totalReturn = parseFloat(simulacao.totalReturn?.toString() ?? '0');
+                acumulador.totalInitial += inicial;
+                acumulador.totalReturn += totalReturn;
+                return acumulador;
+            },
+            { totalInitial: 0, totalReturn: 0 },
         );
+    }
+
+    /**
+ * Busca o preço de fechamento mais próximo do startDate
+ * para o ativo informado, usando a brapi.
+ */
+    private async getUnderlyingPriceAtStart(
+        symbol: string,
+        startDate: Date,
+        endDate: Date,
+    ): Promise<number | null> {
+        try {
+            const now = new Date();
+            const MS_PER_DAY = 1000 * 60 * 60 * 24;
+            const daysBack = Math.max(
+                0,
+                (now.getTime() - startDate.getTime()) / MS_PER_DAY,
+            );
+
+            let range: string;
+            if (daysBack <= 31) range = '1mo';
+            else if (daysBack <= 93) range = '3mo';
+            else if (daysBack <= 186) range = '6mo';
+            else if (daysBack <= 365) range = '1y';
+            else if (daysBack <= 365 * 2) range = '2y';
+            else range = '5y';
+
+            const response = await this.marketService.getQuoteHistory(
+                symbol,
+                range,
+                '1d',
+            );
+
+            const firstResult = response.results?.[0];
+            const raw: BrapiHistoricalPrice[] =
+                firstResult?.historicalDataPrice ?? [];
+
+            const series = raw
+                .map((bar): { date: Date; close: number } | null => {
+                    const ts = bar.date ?? 0;
+                    const d = new Date(ts * 1000);
+                    const close = bar.close ?? bar.open ?? null;
+                    if (close == null) return null;
+                    return { date: d, close: Number(close) };
+                })
+                .filter(
+                    (p): p is { date: Date; close: number } =>
+                        !!p && !Number.isNaN(p.close),
+                )
+                .filter(
+                    (p) =>
+                        p.date.getTime() >= startDate.getTime() &&
+                        p.date.getTime() <= endDate.getTime(),
+                )
+                .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+            if (!series.length) {
+                return null;
+            }
+
+            return series[0].close;
+        } catch (err) {
+            this.logger.error(
+                `[SimulationsService] Erro ao buscar preço inicial de ${symbol}`,
+                err instanceof Error ? err.stack : String(err),
+            );
+            return null;
+        }
     }
 }

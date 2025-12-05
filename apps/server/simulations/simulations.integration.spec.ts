@@ -1,12 +1,3 @@
-/**
- * Testes de integração - Simulações
- * 
- * CORREÇÕES APLICADAS:
- * 1. Ordem correta de deleção (cascade automático do PostgreSQL)
- * 2. Cleanup melhorado no afterAll
- * 3. Melhor tratamento de erros
- * 4. Uso correto de beforeEach e afterEach
- */
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import supertest from 'supertest';

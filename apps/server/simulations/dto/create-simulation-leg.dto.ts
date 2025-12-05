@@ -61,4 +61,13 @@ export class CreateSimulationLegDto {
     @IsOptional()
     @IsString()
     profitLoss?: string;
+
+    @IsOptional()
+    @IsString()
+    strikePrice?: string;
+
+    @IsOptional()
+    @Type(() => Date)
+    @IsDate()
+    expiryDate?: Date;
 }
