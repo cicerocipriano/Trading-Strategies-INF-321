@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import {
     proficiencyBadge,
     proficiencyLabels,
@@ -25,6 +26,8 @@ interface StrategyCardProps {
 }
 
 export function StrategyCard({ strategy }: StrategyCardProps) {
+    const navigate = useNavigate();
+
     const profKey = strategy.proficiencyLevel ?? '';
     const outlookKey = strategy.marketOutlook ?? '';
     const riskKey = strategy.riskProfile ?? '';
@@ -32,13 +35,28 @@ export function StrategyCard({ strategy }: StrategyCardProps) {
     const rewardKey = strategy.rewardProfile ?? '';
     const typeKey = strategy.strategyType ?? '';
 
+    const handleViewDetails = () => {
+        navigate(`/strategies/${strategy.id}`);
+    };
+
+    const handleSimulate = () => {
+        navigate('/simulator', {
+            state: {
+                strategyId: String(strategy.id),
+                strategyName: strategy.name,
+            },
+        });
+    };
+
     return (
-        <div className="
+        <div
+            className="
                 ts-glass-surface ts-glass-hover-lift
                 rounded-2xl
                 p-6
                 flex flex-col
-            " >
+            "
+        >
             {/* Título + resumo */}
             <div className="flex-1">
                 <h3 className="text-lg font-semibold mb-1">{strategy.name}</h3>
@@ -52,7 +70,8 @@ export function StrategyCard({ strategy }: StrategyCardProps) {
                         <span
                             className={[
                                 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium',
-                                proficiencyBadge[profKey] ?? 'bg-slate-500/10 text-slate-200',
+                                proficiencyBadge[profKey] ??
+                                'bg-slate-500/10 text-slate-200',
                             ].join(' ')}
                         >
                             {proficiencyLabels[profKey] ?? profKey}
@@ -63,7 +82,8 @@ export function StrategyCard({ strategy }: StrategyCardProps) {
                         <span
                             className={[
                                 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium',
-                                outlookBadge[outlookKey] ?? 'bg-slate-500/10 text-slate-200',
+                                outlookBadge[outlookKey] ??
+                                'bg-slate-500/10 text-slate-200',
                             ].join(' ')}
                         >
                             {outlookLabels[outlookKey] ?? outlookKey}
@@ -80,7 +100,8 @@ export function StrategyCard({ strategy }: StrategyCardProps) {
                         <span
                             className={[
                                 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium',
-                                riskProfileBadge[riskKey] ?? 'bg-amber-500/10 text-amber-200',
+                                riskProfileBadge[riskKey] ??
+                                'bg-amber-500/10 text-amber-200',
                             ].join(' ')}
                         >
                             Risco {riskProfileLabels[riskKey] ?? riskKey}
@@ -131,10 +152,7 @@ export function StrategyCard({ strategy }: StrategyCardProps) {
                 <button
                     type="button"
                     className="ts-btn-secondary"
-                    onClick={(e) => {
-                        e.preventDefault();
-                        window.location.href = `/strategies/${strategy.id}`;
-                    }}
+                    onClick={handleViewDetails}
                 >
                     Ver detalhes
                 </button>
@@ -142,11 +160,7 @@ export function StrategyCard({ strategy }: StrategyCardProps) {
                 <button
                     type="button"
                     className="ts-btn-primary"
-                    onClick={(e) => {
-                        e.preventDefault();
-                        // TODO: conectar com simulador
-                        console.log('Simular estratégia', strategy.id);
-                    }}
+                    onClick={handleSimulate}
                 >
                     Simular
                 </button>
