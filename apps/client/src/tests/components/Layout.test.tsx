@@ -56,7 +56,7 @@ describe('Componente Layout', () => {
         );
 
         expect(screen.getByText('Estratégias')).toBeInTheDocument();
-        expect(screen.getByText('Simulador')).toBeInTheDocument();
+        expect(screen.getByText('Simulações')).toBeInTheDocument();
         expect(screen.getByText('Dashboard')).toBeInTheDocument();
     });
 
