@@ -8,16 +8,26 @@ export interface MarketAsset {
     currency: string;   // Ex: BRL
 }
 
-interface BrapiQuoteResult {
+export interface BrapiHistoricalPrice {
+    date?: number;   // epoch em segundos
+    close?: number;
+    open?: number;
+    high?: number;
+    low?: number;
+    volume?: number;
+}
+
+export interface BrapiQuoteResult {
     symbol: string;
     shortName?: string;
     longName?: string;
     regularMarketPrice?: number;
     currency?: string;
     regularMarketTime?: string;
+    historicalDataPrice?: BrapiHistoricalPrice[];
 }
 
-interface BrapiQuoteResponse {
+export interface BrapiQuoteResponse {
     results?: BrapiQuoteResult[];
 }
 
@@ -222,12 +232,16 @@ export class MarketService {
     /**
      * Futuro: histórico de cotações de um único ativo
      */
-    async getQuoteHistory(symbol: string): Promise<BrapiQuoteResponse> {
+    async getQuoteHistory(
+        symbol: string,
+        range = '1mo',
+        interval = '1d',
+    ): Promise<BrapiQuoteResponse> {
         const url = `${BRAPI_BASE_URL}/quote/${symbol}`;
 
         const params: Record<string, string> = {
-            range: '1mo',
-            interval: '1d',
+            range,
+            interval,
         };
 
         if (BRAPI_API_KEY) {
@@ -237,6 +251,11 @@ export class MarketService {
         const response = await axios.get<BrapiQuoteResponse>(url, {
             params,
             timeout: 10000,
+            headers: {
+                'User-Agent':
+                    'TradingStrategies-INF321/1.0 (+https://github.com/LucasMGcode)',
+                Accept: 'application/json,text/plain,*/*',
+            },
         });
 
         return response.data;
