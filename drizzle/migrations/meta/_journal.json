@@ -15,6 +15,13 @@
       "when": 1762863285455,
       "tag": "0001_demonic_ken_ellis",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1764939052444,
+      "tag": "0002_bouncy_stone_men",
+      "breakpoints": true
     }
   ]
 }

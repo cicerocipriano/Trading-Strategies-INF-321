@@ -72,6 +72,12 @@ export const instrumentTypeEnum = pgEnum('instrument_type', [
     'STOCK',
 ]);
 
+// Status da simulação.
+export const simulationStatusEnum = pgEnum('simulation_status', [
+    'IN_PROGRESS',
+    'CONCLUDED',
+]);
+
 // Relação do preço de exercício com o ativo subjacente na entrada.
 // ATM // At The Money
 // No Dinheiro
@@ -147,13 +153,16 @@ export const simulations = pgTable('simulations', {
         .references(() => strategies.id, { onDelete: 'cascade' }),
     assetSymbol: varchar('asset_symbol', { length: 20 }).notNull(),
     simulationName: varchar('simulation_name', { length: 255 }).notNull(),
-    startDate: date('start_date', { mode: 'date'}).notNull(),
-    endDate: date('end_date', { mode: 'date'}).notNull(),
+    startDate: date('start_date', { mode: 'date' }).notNull(),
+    endDate: date('end_date', { mode: 'date' }).notNull(),
     initialCapital: numeric('initial_capital', { precision: 18, scale: 2 }).notNull(),
     totalReturn: numeric('total_return', { precision: 18, scale: 2 }),
     returnPercentage: numeric('return_percentage', { precision: 18, scale: 4 }),
     maxDrawdown: numeric('max_drawdown', { precision: 18, scale: 4 }),
-    createdAt: timestamp('created_at', { withTimezone: false }).defaultNow().notNull(),
+    status: simulationStatusEnum('status').notNull().default('IN_PROGRESS'),
+    createdAt: timestamp('created_at', { withTimezone: false })
+        .defaultNow()
+        .notNull(),
 });
 
 /**
