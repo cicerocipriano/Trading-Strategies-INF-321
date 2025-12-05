@@ -8,6 +8,7 @@ import Home from '@/pages/Home';
 import Strategies from '@/pages/Strategies';
 import StrategyDetail from '@/pages/StrategyDetail';
 import Dashboard from '@/pages/Dashboard';
+import Simulations from '@/pages/Simulations';
 import Simulator from '@/pages/Simulator';
 import Profile from '@/pages/Profile';
 
@@ -71,6 +72,16 @@ function App() {
                         }
                     />
                     <Route
+                        path="/simulations"
+                        element={
+                            <ProtectedRoute isAuthenticated={isAuthenticated}>
+                            <Layout>
+                                <Simulations />
+                            </Layout>
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
                         path="/simulator"
                         element={
                             <ProtectedRoute isAuthenticated={isAuthenticated}>
@@ -96,7 +107,7 @@ function App() {
                 </Routes>
             </Router>
             <Toaster />
-        </QueryClientProvider>
+        </QueryClientProvider >
     );
 }
 

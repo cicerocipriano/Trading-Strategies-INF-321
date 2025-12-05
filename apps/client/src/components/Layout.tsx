@@ -20,7 +20,7 @@ export default function Layout({ children }: LayoutProps) {
     return (
         <div className="min-h-screen ts-gradient-page text-foreground">
             {/* Navigation */}
-            <nav className="border-b border-border bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+            <nav className="border-b border-border bg-card/80 backdrop-blur supports-backdrop-filter:bg-card/60">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         {/* Logo */}
@@ -44,10 +44,10 @@ export default function Layout({ children }: LayoutProps) {
                                 Estratégias
                             </Link>
                             <Link
-                                to="/simulator"
+                                to="/simulations"
                                 className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
                             >
-                                Simulador
+                                Simulações
                             </Link>
                             <Link
                                 to="/dashboard"

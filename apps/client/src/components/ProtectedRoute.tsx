@@ -3,6 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
 export interface ProtectedRouteProps {
+    isAuthenticated: boolean;
     children: ReactElement;
 }
 
