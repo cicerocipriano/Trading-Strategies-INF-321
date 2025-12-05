@@ -1,38 +1,37 @@
-import { useMarketAssets } from '@/hooks/useMarketAssets';
-import { useMemo, useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Play, RotateCcw, Info } from 'lucide-react';
 import { toast } from 'sonner';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-import { useStrategies, type StrategyFilters } from '@/hooks/useStrategies';
-import { apiService } from '@/services/api';
 import { useAuth } from '@/hooks/useAuth';
+import { apiService } from '@/services/api';
+import {
+    useStrategies,
+    Strategy,
+    StrategyFilters,
+} from '@/hooks/useStrategies';
+import {
+    useMarketAssets,
+    MarketAsset,
+} from '@/hooks/useMarketAssets';
 
 interface SimulatorLocationState {
     strategyId?: string;
     strategyName?: string;
 }
 
-interface AuthUserWithId {
+type AuthUserWithId = {
     id: string;
-}
-
-const ASSET_OPTIONS = [
-    { id: '1', symbol: 'PETR4', label: 'PETR4 - Petrobras' },
-    { id: '2', symbol: 'VALE3', label: 'VALE3 - Vale' },
-    { id: '3', symbol: 'ITUB4', label: 'ITUB4 - Itaú' },
-    { id: '4', symbol: 'BBDC4', label: 'BBDC4 - Bradesco' },
-    { id: '5', symbol: 'WEGE3', label: 'WEGE3 - WEG' },
-];
+};
 
 export default function Simulator() {
     const location = useLocation();
+    const navigate = useNavigate(); // <- NOVO
     const state = (location.state || {}) as SimulatorLocationState;
 
     const { user } = useAuth();
-    const userId = (user as AuthUserWithId | null | undefined)?.id;
+    const authUser = user as AuthUserWithId | null | undefined;
 
-    // Filtros vazios com referência estável (pra não entrar em loop no hook)
     const emptyFilters = useMemo<StrategyFilters>(() => ({}), []);
     const {
         strategies,
@@ -40,23 +39,24 @@ export default function Simulator() {
         error: strategiesError,
     } = useStrategies(emptyFilters);
 
-    const [formData, setFormData] = useState({
-        strategyId: state.strategyId ?? '',
-        assetId: '',
-        startDate: '',
-        endDate: '',
-        // agora o nome é totalmente livre; só o placeholder sugere algo
-        simulationName: '',
-    });
-
-    const [isLoading, setIsLoading] = useState(false);
-
     const {
         data: assets = [],
-        isLoading: isLoadingAssets,
-        isError: isAssetsError,
+        isLoading: loadingAssets,
+        isError: errorAssets,
     } = useMarketAssets();
 
+    const [formData, setFormData] = useState({
+        strategyId: state.strategyId ?? '',
+        assetSymbol: '',
+        startDate: '',
+        endDate: '',
+        initialCapital: '',
+        simulationName: state.strategyName
+            ? `Simulação ${state.strategyName}`
+            : '',
+    });
+
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -71,78 +71,82 @@ export default function Simulator() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!userId) {
-            toast.error('Não foi possível identificar o usuário. Faça login novamente.');
+        if (!authUser?.id) {
+            toast.error('Não foi possível identificar o usuário autenticado.');
             return;
         }
 
-        if (
-            !formData.strategyId ||
-            !formData.assetId ||
-            !formData.startDate ||
-            !formData.endDate
-        ) {
+        const {
+            strategyId,
+            assetSymbol,
+            startDate,
+            endDate,
+            initialCapital,
+            simulationName,
+        } = formData;
+
+        if (!strategyId || !assetSymbol || !startDate || !endDate || !initialCapital) {
             toast.error('Por favor, preencha todos os campos obrigatórios');
             return;
         }
 
-        const selectedAsset = ASSET_OPTIONS.find(
-            (asset) => asset.id === formData.assetId,
+        const capitalNumber = Number.parseFloat(
+            initialCapital.replace(',', '.'),
         );
 
-        if (!selectedAsset) {
-            toast.error('Selecione um ativo válido');
+        if (!Number.isFinite(capitalNumber) || capitalNumber <= 0) {
+            toast.error('Informe um capital inicial válido (maior que zero)');
             return;
         }
 
         try {
-            setIsLoading(true);
+            setIsSubmitting(true);
 
-            // Chamada real para o backend
             await apiService.createSimulation({
-                userId,
-                strategyId: formData.strategyId,
-                assetSymbol: selectedAsset.symbol,
+                userId: authUser.id,
+                strategyId,
+                assetSymbol,
                 simulationName:
-                    formData.simulationName && formData.simulationName.trim().length > 0
-                        ? formData.simulationName.trim()
-                        : undefined,
-                startDate: formData.startDate, // "YYYY-MM-DD" vindo do input date
-                endDate: formData.endDate,
-                // por enquanto usamos um valor fixo; depois podemos expor esse campo no form
-                initialCapital: '0',
+                    simulationName || `Simulação ${assetSymbol}`,
+                startDate,
+                endDate,
+                initialCapital: capitalNumber.toFixed(2),
             });
 
             toast.success('Simulação criada com sucesso!');
 
+            // Opcional: resetar antes de sair (não faz mal)
             setFormData({
                 strategyId: '',
-                assetId: '',
+                assetSymbol: '',
                 startDate: '',
                 endDate: '',
+                initialCapital: '',
                 simulationName: '',
             });
-        } catch (err) {
-            console.error('Erro ao criar simulação', err);
-            toast.error('Erro ao criar simulação. Tente novamente.');
+
+            // REDIRECIONA PARA A PÁGINA DE SIMULAÇÕES
+            navigate('/simulations');
+        } catch (error) {
+            console.error('Erro ao criar simulação', error);
+            toast.error('Erro ao criar simulação');
         } finally {
-            setIsLoading(false);
+            setIsSubmitting(false);
         }
     };
 
     const handleReset = () => {
         setFormData({
             strategyId: '',
-            assetId: '',
+            assetSymbol: '',
             startDate: '',
             endDate: '',
+            initialCapital: '',
             simulationName: '',
         });
     };
 
-    const simulationNamePlaceholder = state.strategyName
-        ? `Ex: ${state.strategyName} em PETR4`
-        : 'Ex: Teste Long Call em PETR4';
+    const isLoadingForm = isSubmitting || loadingStrategies || loadingAssets;
 
     return (
         <div className="space-y-10">
@@ -180,9 +184,9 @@ export default function Simulator() {
                                     name="simulationName"
                                     value={formData.simulationName}
                                     onChange={handleChange}
-                                    placeholder={simulationNamePlaceholder}
+                                    placeholder="Ex: Teste Long Call em PETR4"
                                     className="w-full px-4 py-2.5 rounded-lg border border-border/60 bg-background/60 focus:outline-none focus:ring-2 focus:ring-primary/70 focus:border-primary/60 text-sm"
-                                    disabled={isLoading}
+                                    disabled={isLoadingForm}
                                 />
                             </div>
 
@@ -200,66 +204,100 @@ export default function Simulator() {
                                     value={formData.strategyId}
                                     onChange={handleChange}
                                     className="w-full px-4 py-2.5 rounded-lg border border-border/60 bg-background/60 focus:outline-none focus:ring-2 focus:ring-primary/70 focus:border-primary/60 text-sm"
-                                    disabled={isLoading || loadingStrategies}
+                                    disabled={isLoadingForm}
                                 >
-                                    <option value="">
-                                        {loadingStrategies
-                                            ? 'Carregando estratégias...'
-                                            : 'Selecione uma estratégia'}
-                                    </option>
+                                    {loadingStrategies && (
+                                        <option>Carregando estratégias...</option>
+                                    )}
 
-                                    {!loadingStrategies &&
-                                        strategies.map((s) => (
-                                            <option key={s.id} value={s.id}>
-                                                {s.name}
+                                    {strategiesError && !loadingStrategies && (
+                                        <option>
+                                            Erro ao carregar estratégias
+                                        </option>
+                                    )}
+
+                                    {!loadingStrategies && !strategiesError && (
+                                        <>
+                                            <option value="">
+                                                Selecione uma estratégia
                                             </option>
-                                        ))}
+                                            {strategies.map((s: Strategy) => (
+                                                <option
+                                                    key={s.id}
+                                                    value={s.id}
+                                                >
+                                                    {s.name}
+                                                </option>
+                                            ))}
+                                        </>
+                                    )}
                                 </select>
-
-                                {strategiesError && (
-                                    <p className="mt-1 text-xs text-red-500">
-                                        Não foi possível carregar a lista de estratégias.
-                                    </p>
-                                )}
                             </div>
 
                             {/* Ativo */}
                             <div>
                                 <label
-                                    htmlFor="assetId"
+                                    htmlFor="assetSymbol"
                                     className="block text-sm font-medium mb-2 text-card-foreground/90"
                                 >
                                     Ativo *
                                 </label>
                                 <select
-                                    id="assetId"
-                                    name="assetId"
-                                    value={formData.assetId}
+                                    id="assetSymbol"
+                                    name="assetSymbol"
+                                    value={formData.assetSymbol}
                                     onChange={handleChange}
                                     className="w-full px-4 py-2.5 rounded-lg border border-border/60 bg-background/60 focus:outline-none focus:ring-2 focus:ring-primary/70 focus:border-primary/60 text-sm"
-                                    disabled={isLoading || isLoadingAssets} >
-                                    <option value="">
-                                        {isLoadingAssets
-                                            ? 'Carregando ativos...'
-                                            : 'Selecione um ativo'}
-                                    </option>
+                                    disabled={isLoadingForm}
+                                >
+                                    {loadingAssets && (
+                                        <option>Carregando ativos...</option>
+                                    )}
 
-                                    {!isLoadingAssets &&
-                                        assets.map((asset) => (
-                                            <option
-                                                key={asset.symbol}
-                                                value={asset.symbol} >
-                                                {asset.symbol.replace('.SA', '')} -{' '}
-                                                {asset.shortName}
+                                    {errorAssets && !loadingAssets && (
+                                        <option>
+                                            Erro ao carregar ativos
+                                        </option>
+                                    )}
+
+                                    {!loadingAssets && !errorAssets && (
+                                        <>
+                                            <option value="">
+                                                Selecione um ativo
                                             </option>
-                                        ))}
+                                            {assets.map((asset: MarketAsset) => (
+                                                <option
+                                                    key={asset.symbol}
+                                                    value={asset.symbol}
+                                                >
+                                                    {asset.symbol} - {asset.shortName}
+                                                </option>
+                                            ))}
+                                        </>
+                                    )}
                                 </select>
+                            </div>
 
-                                {isAssetsError && (
-                                    <p className="mt-1 text-xs text-red-500">
-                                        Não foi possível carregar a lista de ativos.
-                                    </p>
-                                )}
+                            {/* Capital inicial */}
+                            <div>
+                                <label
+                                    htmlFor="initialCapital"
+                                    className="block text-sm font-medium mb-2 text-card-foreground/90"
+                                >
+                                    Capital inicial (R$) *
+                                </label>
+                                <input
+                                    id="initialCapital"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    name="initialCapital"
+                                    value={formData.initialCapital}
+                                    onChange={handleChange}
+                                    placeholder="Ex: 10000,00"
+                                    className="w-full px-4 py-2.5 rounded-lg border border-border/60 bg-background/60 focus:outline-none focus:ring-2 focus:ring-primary/70 focus:border-primary/60 text-sm"
+                                    disabled={isLoadingForm}
+                                />
                             </div>
 
                             {/* Intervalo de datas */}
@@ -277,7 +315,7 @@ export default function Simulator() {
                                     value={formData.startDate}
                                     onChange={handleChange}
                                     className="w-full px-4 py-2.5 rounded-lg border border-border/60 bg-background/60 focus:outline-none focus:ring-2 focus:ring-primary/70 focus:border-primary/60 text-sm"
-                                    disabled={isLoading}
+                                    disabled={isLoadingForm}
                                 />
                             </div>
                             <div>
@@ -294,7 +332,7 @@ export default function Simulator() {
                                     value={formData.endDate}
                                     onChange={handleChange}
                                     className="w-full px-4 py-2.5 rounded-lg border border-border/60 bg-background/60 focus:outline-none focus:ring-2 focus:ring-primary/70 focus:border-primary/60 text-sm"
-                                    disabled={isLoading}
+                                    disabled={isLoadingForm}
                                 />
                             </div>
                         </div>
@@ -303,19 +341,21 @@ export default function Simulator() {
                         <div className="flex flex-col sm:flex-row gap-3 pt-2">
                             <button
                                 type="submit"
-                                disabled={isLoading}
+                                disabled={isLoadingForm}
                                 className="ts-btn-primary w-full sm:w-auto gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                             >
                                 <Play className="w-4 h-4" />
                                 <span>
-                                    {isLoading ? 'Simulando...' : 'Executar Simulação'}
+                                    {isSubmitting
+                                        ? 'Simulando...'
+                                        : 'Executar Simulação'}
                                 </span>
                             </button>
 
                             <button
                                 type="button"
                                 onClick={handleReset}
-                                disabled={isLoading}
+                                disabled={isLoadingForm}
                                 className="ts-btn-secondary w-full sm:w-auto gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                             >
                                 <RotateCcw className="w-4 h-4" />

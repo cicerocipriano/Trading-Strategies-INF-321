@@ -50,7 +50,7 @@ async function bootstrap() {
     ║                                                            ║
     ║   Trading Strategies API - NestJS                          ║
     ║                                                            ║
-    ║   Server rodando em: http://${host}:${port}                   ║
+    ║   Server rodando em: http://${host}:${port}                 ║
     ║                                                            ║
     ║   Endpoints disponíveis:                                   ║
     ║   - GET    /api/strategies                                 ║
@@ -59,7 +59,7 @@ async function bootstrap() {
     ║   - GET    /api/users/:id/profile                          ║
     ║   - GET    /api/auth/me                                    ║
     ║                                                            ║
-    ║   Documentação: http://${host}:${port}/api/docs               ║
+    ║   Documentação: http://${host}:${port}/api/docs             ║
     ║                                                            ║
     ╚════════════════════════════════════════════════════════════╝
     ` );
