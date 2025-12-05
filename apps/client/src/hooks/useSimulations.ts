@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '@/services/api';
 import { useAuth } from './useAuth';
 
@@ -52,7 +52,7 @@ function parseNumberField(value: string | number | null | undefined): number | n
 
 /**
  * Deriva o status da simulação.
- * Aqui considerei: se a data de término já passou → CONCLUDED,
+ * Se a data de término já passou → CONCLUDED,
  * caso contrário → IN_PROGRESS.
  */
 function deriveStatus(sim: SimulationApiDTO): SimulationStatus {
@@ -99,7 +99,7 @@ function mapToSimulationListItem(sim: SimulationApiDTO): SimulationListItem {
 }
 
 /**
- * Hook simples para listar TODAS as simulações do usuário logado.
+ * Hook para listar TODAS as simulações do usuário logado.
  * Usa GET /simulations/user/:userId (sem limit → traz tudo ordenado por data).
  */
 export function useSimulations() {
@@ -118,6 +118,31 @@ export function useSimulations() {
             const data = response.data as SimulationApiDTO[];
 
             return data.map(mapToSimulationListItem);
+        },
+    });
+}
+
+/**
+ * Hook para excluir uma simulação.
+ * Usa DELETE /simulations/:id e invalida a lista + estatísticas.
+ */
+export function useDeleteSimulation() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (id: string) => {
+            await apiService.deleteSimulation(id);
+        },
+        onSuccess: () => {
+            // Recarrega a lista de simulações
+            queryClient.invalidateQueries({
+                queryKey: ['user-simulations'],
+            });
+
+            // Recarrega estatísticas usadas no Dashboard
+            queryClient.invalidateQueries({
+                queryKey: ['simulation-statistics'],
+            });
         },
     });
 }
