@@ -135,6 +135,10 @@ class ApiService {
         return this.api.get(`/simulations/user/${userId}/statistics`);
     }
 
+    async getMarketAssets() {
+        return this.api.get('/market/assets');
+    }
+
     // Users endpoints
     async getUserProfile(userId: string) {
         return this.api.get(`/users/${userId}/profile`);
