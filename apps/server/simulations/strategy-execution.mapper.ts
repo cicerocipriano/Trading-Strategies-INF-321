@@ -17,10 +17,8 @@ export function mapExecutionTypeFromStrategyName(
 
     const normalized = name.trim().toLowerCase();
 
-    switch (normalized) {
-        case 'long call':
-            return 'LONG_CALL';
-        default:
-            return 'BUY_HOLD_STOCK';
+    if (normalized === 'long call') {
+        return 'LONG_CALL';
     }
+    return 'BUY_HOLD_STOCK';
 }
