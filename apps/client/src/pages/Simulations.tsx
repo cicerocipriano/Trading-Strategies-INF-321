@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
@@ -90,15 +90,11 @@ function Simulations() {
             ? Math.ceil(totalSimulations / PAGE_SIZE)
             : 1;
 
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    const clampedCurrentPage = Math.min(currentPage, totalPages);
+
+    const startIndex = (clampedCurrentPage - 1) * PAGE_SIZE;
     const endIndex = startIndex + PAGE_SIZE;
     const paginatedSimulations = simulations.slice(startIndex, endIndex);
-
-    useEffect(() => {
-        if (currentPage > totalPages) {
-            setCurrentPage(totalPages);
-        }
-    }, [currentPage, totalPages]);
 
     const handleDeleteSimulation = async (
         simulation: SimulationListItem,
@@ -243,7 +239,7 @@ function Simulations() {
                                             Math.max(1, p - 1),
                                         )
                                     }
-                                    disabled={currentPage === 1}
+                                    disabled={clampedCurrentPage === 1}
                                     className="ts-btn-secondary px-3 py-1 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Anterior
@@ -255,7 +251,7 @@ function Simulations() {
                                             Math.min(totalPages, p + 1),
                                         )
                                     }
-                                    disabled={currentPage === totalPages}
+                                    disabled={clampedCurrentPage === totalPages}
                                     className="ts-btn-secondary px-3 py-1 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Próxima

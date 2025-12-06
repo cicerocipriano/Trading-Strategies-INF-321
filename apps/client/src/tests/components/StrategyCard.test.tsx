@@ -186,8 +186,10 @@ describe('Componente StrategyCard', () => {
         it('deve lidar com ID numérico', () => {
             const estrategiaComIdNumerico: Strategy = {
                 ...estrategiaMock,
-                id: 999 as any,
+                // força um ID numérico em runtime, mas sem usar `any`
+                id: 999 as unknown as Strategy['id'],
             };
+
             renderWithProviders(
                 <StrategyCard strategy={estrategiaComIdNumerico} />
             );
@@ -216,9 +218,9 @@ describe('Componente StrategyCard', () => {
         it('deve lidar com valores nulos em campos opcionais', () => {
             const estrategiaComCamposNulos: Strategy = {
                 ...estrategiaMock,
-                proficiencyLevel: null as any,
-                marketOutlook: null as any,
-                volatilityView: null as any,
+                proficiencyLevel: null as unknown as Strategy['proficiencyLevel'],
+                marketOutlook: null as unknown as Strategy['marketOutlook'],
+                volatilityView: null as unknown as Strategy['volatilityView'],
             };
 
             renderWithProviders(
