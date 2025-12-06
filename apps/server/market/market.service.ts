@@ -100,26 +100,74 @@ export class MarketService {
         }));
     }
 
-    /**
-     * Lista básica de ativos para popular o select do simulador.
-     * Usa brapi ticker a ticker (respeita limite do plano) + fallback local.
-     * Agora com cache em memória para reduzir chamadas.
-     */
-    async getBasicAssets(): Promise<MarketAsset[]> {
-        // 1) Verifica cache
-        if (
-            this.basicAssetsCache &&
-            this.basicAssetsCache.expiresAt > Date.now()
-        ) {
-            this.logger.log(
-                '[MarketService] Retornando ativos do cache em memória',
+    private isCacheValid(): boolean {
+        return !!this.basicAssetsCache && this.basicAssetsCache.expiresAt > Date.now();
+    }
+
+    private updateCache(data: MarketAsset[]) {
+        this.basicAssetsCache = {
+            data,
+            expiresAt: Date.now() + this.CACHE_TTL_MS,
+        };
+    }
+
+    private buildMarketAsset(result: BrapiQuoteResult): MarketAsset {
+        const normalizedName = this.normalizeShortName(
+            result.symbol,
+            result.shortName ?? result.longName,
+        );
+        const finalName = this.friendlyNames[result.symbol] ?? normalizedName;
+
+        return {
+            symbol: result.symbol,
+            shortName: finalName,
+            exchange: 'B3',
+            currency: result.currency ?? 'BRL',
+        };
+    }
+
+    private async fetchAsset(
+        symbol: string,
+        fallbackMap: Map<string, MarketAsset>,
+    ): Promise<MarketAsset | null> {
+        try {
+            const url = `${BRAPI_BASE_URL}/quote/${symbol}`;
+            const params: Record<string, string> = BRAPI_API_KEY ? { token: BRAPI_API_KEY } : {};
+
+            const response = await axios.get<BrapiQuoteResponse>(url, {
+                params,
+                timeout: 10000,
+                headers: {
+                    'User-Agent': 'TradingStrategies-INF321/1.0 (+https://github.com/LucasMGcode)',
+                    Accept: 'application/json,text/plain,*/*',
+                },
+            });
+
+            const result = response.data.results?.[0];
+            if (!result) {
+                this.logger.warn(
+                    `[MarketService] brapi não retornou dados para ${symbol}, usando fallback local para esse ativo`,
+                );
+                return fallbackMap.get(symbol) ?? null;
+            }
+
+            return this.buildMarketAsset(result);
+        } catch (err) {
+            this.logger.error(
+                `[MarketService] Erro ao obter dados para ${symbol} na brapi, usando fallback para esse ativo`,
+                err instanceof Error ? err.stack : String(err),
             );
-            return this.basicAssetsCache.data;
+            return fallbackMap.get(symbol) ?? null;
+        }
+    }
+
+    async getBasicAssets(): Promise<MarketAsset[]> {
+        if (this.isCacheValid()) {
+            this.logger.log('[MarketService] Retornando ativos do cache em memória');
+            return this.basicAssetsCache!.data;
         }
 
-        // 2) Se não tem cache válido, busca na brapi
         const tickers = ['PETR4', 'VALE3', 'ITUB4', 'BBDC4', 'WEGE3'];
-
         const fallbackAssets = this.getFallbackAssets();
         const fallbackMap = new Map<string, MarketAsset>(
             fallbackAssets.map((a) => [a.symbol, a]),
@@ -128,86 +176,22 @@ export class MarketService {
         const assets: MarketAsset[] = [];
 
         for (const symbol of tickers) {
-            try {
-                const url = `${BRAPI_BASE_URL}/quote/${symbol}`;
-
-                const params: Record<string, string> = {};
-                if (BRAPI_API_KEY) {
-                    params.token = BRAPI_API_KEY;
-                }
-
-                const response = await axios.get<BrapiQuoteResponse>(url, {
-                    params,
-                    timeout: 10000,
-                    headers: {
-                        'User-Agent':
-                            'TradingStrategies-INF321/1.0 (+https://github.com/LucasMGcode)',
-                        Accept: 'application/json,text/plain,*/*',
-                    },
-                });
-
-                const result = response.data.results?.[0];
-
-                if (!result) {
-                    this.logger.warn(
-                        `[MarketService] brapi não retornou dados para ${symbol}, usando fallback local para esse ativo`,
-                    );
-                    const fallback = fallbackMap.get(symbol);
-                    if (fallback) {
-                        assets.push(fallback);
-                    }
-                    continue;
-                }
-
-                const normalizedName = this.normalizeShortName(
-                    result.symbol,
-                    result.shortName ?? result.longName,
-                );
-
-                // 3) Aplica friendlyNames por símbolo
-                const finalName =
-                    this.friendlyNames[result.symbol] ?? normalizedName;
-
-                assets.push({
-                    symbol: result.symbol,
-                    shortName: finalName,
-                    exchange: 'B3',
-                    currency: result.currency ?? 'BRL',
-                });
-            } catch (err) {
-                this.logger.error(
-                    `[MarketService] Erro ao obter dados para ${symbol} na brapi, usando fallback para esse ativo`,
-                    err instanceof Error ? err.stack : String(err),
-                );
-
-                const fallback = fallbackMap.get(symbol);
-                if (fallback) {
-                    assets.push(fallback);
-                }
-            }
+            const asset = await this.fetchAsset(symbol, fallbackMap);
+            if (asset) assets.push(asset);
         }
 
         if (!assets.length) {
             this.logger.warn(
                 '[MarketService] Nenhum ativo retornado da brapi, usando lista completa de fallback',
             );
-            this.basicAssetsCache = {
-                data: fallbackAssets,
-                expiresAt: Date.now() + this.CACHE_TTL_MS,
-            };
+            this.updateCache(fallbackAssets);
             return fallbackAssets;
         }
 
         this.logger.log(
             `[MarketService] ${assets.length} ativos obtidos (brapi + fallback) – cache atualizado`,
         );
-
-        // 4) Atualiza cache
-        this.basicAssetsCache = {
-            data: assets,
-            expiresAt: Date.now() + this.CACHE_TTL_MS,
-        };
-
+        this.updateCache(assets);
         return assets;
     }
 
