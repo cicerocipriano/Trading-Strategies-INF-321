@@ -65,14 +65,15 @@ function Dashboard() {
 
                 <Link
                     to="/simulator"
-                    className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90 transition" >
-                    <LineChart className="w-4 h-4 mr-2" />
-                    Nova simulação
+                    className="ts-btn-primary gap-2 self-start sm:self-auto"
+                >
+                    <LineChart className="w-4 h-4" />
+                    <span>Nova simulação</span>
                 </Link>
             </header>
 
             <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-
+                {/* cards de métricas inalterados */}
                 <div className="ts-glass-surface ts-glass-hover-lift rounded-xl p-4 flex flex-col justify-between">
                     <div className="flex items-start justify-between">
                         <div>
@@ -91,7 +92,6 @@ function Dashboard() {
                         </div>
                     </div>
                 </div>
-
 
                 <div className="ts-glass-surface ts-glass-hover-lift rounded-xl p-4 flex flex-col justify-between">
                     <div className="flex items-start justify-between">
@@ -197,7 +197,9 @@ function Dashboard() {
                                     className="flex items-center justify-between rounded-lg border border-border bg-background px-4 py-3"
                                 >
                                     <div>
-                                        <p className="text-sm font-medium">{sim.simulationName}</p>
+                                        <p className="text-sm font-medium">
+                                            {sim.simulationName}
+                                        </p>
                                         <p className="text-xs text-muted-foreground">
                                             {sim.assetSymbol} · {formatTimeAgo(sim.createdAt)}
                                         </p>
@@ -206,8 +208,8 @@ function Dashboard() {
                                     {sim.returnPercentage !== null ? (
                                         <p
                                             className={`text-sm font-semibold ${sim.returnPercentage >= 0
-                                                ? 'text-emerald-500'
-                                                : 'text-red-500'
+                                                    ? 'text-emerald-500'
+                                                    : 'text-red-500'
                                                 }`}
                                         >
                                             {sim.returnPercentage > 0 ? '+' : ''}
@@ -225,15 +227,14 @@ function Dashboard() {
 
                     <div className="pt-1">
                         <Link
-                            to="/simulator"
-                            className="inline-flex w-full items-center justify-center rounded-lg border border-border bg-background px-4 py-2 text-xs font-medium text-muted-foreground hover:bg-muted transition"
+                            to="/simulations"
+                            className="ts-btn-secondary w-full justify-center text-xs"
                         >
                             Ver todas as simulações
                         </Link>
                     </div>
                 </div>
 
-                {/* Estratégias sugeridas */}
                 <SuggestedStrategiesCard
                     experienceLevel={experienceLevel}
                     winRate={winRate}
