@@ -1,5 +1,3 @@
-// src/utils/strategyRecommender.ts
-
 export type ExperienceLevel = 'NOVICE' | 'INTERMEDIATE' | 'ADVANCED';
 export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH';
 
