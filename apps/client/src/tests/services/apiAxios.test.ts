@@ -3,7 +3,7 @@ import axios from 'axios';
 
 vi.mock('axios');
 
-describe('API Service', () => {
+describe('Api.ts, Axios', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         localStorage.clear();
