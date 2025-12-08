@@ -537,7 +537,7 @@ describe('Home', () => {
     it('ao clicar em "Role para ver mais" faz scroll na página', () => {
         const scrollSpy = vi
             .spyOn(window, 'scrollTo')
-            .mockImplementation((_arg: number | ScrollToOptions) => {
+            .mockImplementation(() => {
                 return;
             });
 
