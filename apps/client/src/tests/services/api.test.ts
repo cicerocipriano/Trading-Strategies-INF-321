@@ -1,10 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { AxiosError } from 'axios';
 
-// ---------------------------
-// Tipos auxiliares
-// ---------------------------
-
 interface RequestHeadersLike {
     Authorization?: string;
     [key: string]: unknown;
@@ -55,9 +51,6 @@ interface AxiosDefaultMock {
     __mock: AxiosMockState;
 }
 
-// ---------------------------
-// Mock de axios (factory SEM usar variáveis externas)
-// ---------------------------
 
 vi.mock('axios', () => {
     const requestInterceptors: RequestInterceptor[] = [];
@@ -110,17 +103,12 @@ vi.mock('axios', () => {
     };
 });
 
-// IMPORTANTE: os imports vêm DEPOIS do vi.mock
 import axios from 'axios';
 import { apiService } from '@/services/api';
 
-// Atalhos para o mock
 const axiosDefault = axios as unknown as AxiosDefaultMock;
 const apiInstance = axiosDefault.__mock.instance;
 
-// ---------------------------
-// Testes
-// ---------------------------
 
 describe('ApiService', () => {
     beforeEach(() => {
