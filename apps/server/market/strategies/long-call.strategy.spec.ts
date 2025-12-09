@@ -6,29 +6,39 @@ describe('LongCallStrategy', () => {
 
     const buildContext = (
         overrides: Partial<SimulationContext> = {},
-    ): SimulationContext => ({
-        id: 'sim-1',
-        userId: 'user-1',
-        assetSymbol: 'PETR4',
-        strategyExecutionType: 'LONG_CALL',
-        initialCapital: 1_000,
-        priceSeries: [
-            { date: new Date('2024-01-01'), close: 10 },
-            { date: new Date('2024-01-05'), close: 15 },
-        ],
-        legs: [
-            {
-                id: 'leg-1',
-                instrumentType: 'CALL',
-                action: 'BUY',
-                quantity: 1,
-                entryPrice: 2,
-                strikePrice: 11,
-                expiryDate: new Date('2024-02-01'),
-            },
-        ],
-        ...overrides,
-    });
+    ): SimulationContext => {
+        const {
+            startDate = new Date('2024-01-01'),
+            endDate = new Date('2024-02-01'),
+            ...rest
+        } = overrides;
+
+        return {
+            id: 'sim-1',
+            userId: 'user-1',
+            assetSymbol: 'PETR4',
+            strategyExecutionType: 'LONG_CALL',
+            initialCapital: 1_000,
+            priceSeries: [
+                { date: new Date('2024-01-01'), close: 10 },
+                { date: new Date('2024-01-05'), close: 15 },
+            ],
+            legs: [
+                {
+                    id: 'leg-1',
+                    instrumentType: 'CALL',
+                    action: 'BUY',
+                    quantity: 1,
+                    entryPrice: 2,
+                    strikePrice: 11,
+                    expiryDate: new Date('2024-02-01'),
+                },
+            ],
+            startDate,
+            endDate,
+            ...rest,
+        };
+    };
 
     it('retorna zeros quando não há priceSeries ou capital inválido', async () => {
         const resultEmpty = await strategy.run(
