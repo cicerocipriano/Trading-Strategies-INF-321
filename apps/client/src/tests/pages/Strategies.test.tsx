@@ -1,7 +1,10 @@
+import type { ComponentProps } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
 
 import { PAGE_SIZE } from '@/components/strategies/constants';
+import type { StrategiesFilters as StrategiesFiltersComponent } from '@/components/strategies/StrategyFilters';
+import type { StrategiesPagination as StrategiesPaginationComponent } from '@/components/strategies/StrategyPagination';
 import { renderWithProviders } from '../test-utils';
 
 vi.mock('@/hooks/useStrategies', () => {
@@ -17,7 +20,9 @@ vi.mock('@/components/strategies/StrategyCard', () => ({
 }));
 
 vi.mock('@/components/strategies/StrategyFilters', () => ({
-    StrategiesFilters: (props: any) => (
+    StrategiesFilters: (
+        props: ComponentProps<typeof StrategiesFiltersComponent>,
+    ) => (
         <div data-testid="strategies-filters">
             <span data-testid="filters-total">
                 total: {props.totalStrategies}
@@ -43,7 +48,9 @@ vi.mock('@/components/strategies/StrategyFilters', () => ({
 }));
 
 vi.mock('@/components/strategies/StrategyPagination', () => ({
-    StrategiesPagination: (props: any) => (
+    StrategiesPagination: (
+        props: ComponentProps<typeof StrategiesPaginationComponent>,
+    ) => (
         <div data-testid="strategies-pagination">
             <span data-testid="pagination-page">
                 Página {props.currentPage} de {props.totalPages}
