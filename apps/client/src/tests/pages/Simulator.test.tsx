@@ -91,10 +91,15 @@ const apiServiceMock = vi.mocked(apiService);
 const toastErrorMock = toast.error as unknown as Mock;
 const toastSuccessMock = toast.success as unknown as Mock;
 
-const navigateMock = (ReactRouterDom as any)
-    .__mockedNavigate as Mock<(path: string) => void>;
-const useLocationMock = (ReactRouterDom as any)
-    .__mockedUseLocation as Mock<() => ReactRouterDom.Location>;
+type RouterDomWithMocks = {
+    __mockedNavigate: Mock<(path: string) => void>;
+    __mockedUseLocation: Mock<() => ReactRouterDom.Location>;
+};
+
+const routerDomMocks = ReactRouterDom as unknown as RouterDomWithMocks;
+
+const navigateMock = routerDomMocks.__mockedNavigate;
+const useLocationMock = routerDomMocks.__mockedUseLocation;
 
 function renderSimulator() {
     return renderWithProviders(<Simulator />);

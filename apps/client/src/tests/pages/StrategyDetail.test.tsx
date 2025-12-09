@@ -39,10 +39,16 @@ type StrategyLegMock = {
 };
 
 const useStrategyMocked = vi.mocked(useStrategy);
-const navigateMock = (ReactRouterDom as any)
-    .__mockedNavigate as Mock<(path: string, options?: unknown) => void>;
-const useParamsMock = (ReactRouterDom as any)
-    .__mockedUseParams as Mock<() => { id?: string }>;
+
+type RouterDomWithMocks = {
+    __mockedNavigate: Mock<(path: string, options?: unknown) => void>;
+    __mockedUseParams: Mock<() => { id?: string }>;
+};
+
+const routerDomMocks = ReactRouterDom as unknown as RouterDomWithMocks;
+
+const navigateMock = routerDomMocks.__mockedNavigate;
+const useParamsMock = routerDomMocks.__mockedUseParams;
 
 type StrategyWithLegs = Strategy & { legs: StrategyLegMock[] };
 
