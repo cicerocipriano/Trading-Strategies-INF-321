@@ -15,7 +15,7 @@ vi.mock('react-router-dom', async () => {
 });
 
 import { StrategyCard } from '@/components/strategies/StrategyCard';
-import { renderWithProviders } from '../test-utils';
+import { renderWithProviders } from '../../test-utils';
 
 describe('Componente StrategyCard', () => {
     type StrategyCardProps = Parameters<typeof StrategyCard>[0];

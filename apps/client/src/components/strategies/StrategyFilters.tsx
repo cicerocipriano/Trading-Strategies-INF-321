@@ -49,11 +49,17 @@ export function StrategiesFilters({
             <div className="grid gap-4 md:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]">
                 {/* Pesquisar */}
                 <div className="md:col-span-1">
-                    <label className="block text-sm font-medium mb-2">Pesquisar</label>
+                    <label
+                        htmlFor="strategy-search"
+                        className="block text-sm font-medium mb-2"
+                    >
+                        Pesquisar
+                    </label>
                     <div className="relative">
                         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                         <input
                             type="text"
+                            id="strategy-search"
                             value={searchTerm}
                             onChange={(e) => onSearchChange(e.target.value)}
                             placeholder="Nome, descrição, tipo..."
@@ -64,8 +70,14 @@ export function StrategiesFilters({
 
                 {/* Nível de Experiência */}
                 <div>
-                    <label className="block text-sm font-medium mb-2">Nível de Experiência</label>
+                    <label
+                        htmlFor="strategy-filter-proficiency"
+                        className="block text-sm font-medium mb-2"
+                    >
+                        Nível de Experiência
+                    </label>
                     <select
+                        id="strategy-filter-proficiency"
                         value={filters.proficiencyLevel}
                         onChange={(e) => onFilterChange('proficiencyLevel', e.target.value)}
                         className="w-full px-3 py-2 rounded-lg border border-border bg-background/80 focus:outline-none focus:ring-2 focus:ring-primary/70"
@@ -80,8 +92,14 @@ export function StrategiesFilters({
 
                 {/* Visão de Mercado */}
                 <div>
-                    <label className="block text-sm font-medium mb-2">Visão de Mercado</label>
+                    <label
+                        htmlFor="strategy-filter-outlook"
+                        className="block text-sm font-medium mb-2"
+                    >
+                        Visão de Mercado
+                    </label>
                     <select
+                        id="strategy-filter-outlook"
                         value={filters.marketOutlook}
                         onChange={(e) => onFilterChange('marketOutlook', e.target.value)}
                         className="w-full px-3 py-2 rounded-lg border border-border bg-background/80 focus:outline-none focus:ring-2 focus:ring-primary/70"
@@ -95,8 +113,14 @@ export function StrategiesFilters({
 
                 {/* Volatilidade */}
                 <div>
-                    <label className="block text-sm font-medium mb-2">Volatilidade</label>
+                    <label
+                        htmlFor="strategy-filter-volatility"
+                        className="block text-sm font-medium mb-2"
+                    >
+                        Volatilidade
+                    </label>
                     <select
+                        id="strategy-filter-volatility"
                         value={filters.volatilityView}
                         onChange={(e) => onFilterChange('volatilityView', e.target.value)}
                         className="w-full px-3 py-2 rounded-lg border border-border bg-background/80 focus:outline-none focus:ring-2 focus:ring-primary/70"
@@ -129,8 +153,14 @@ export function StrategiesFilters({
                 <div className="grid gap-4 md:grid-cols-3 pt-2">
                     {/* Perfil de Risco */}
                     <div>
-                        <label className="block text-sm font-medium mb-2">Perfil de Risco</label>
+                        <label
+                            htmlFor="strategy-filter-risk"
+                            className="block text-sm font-medium mb-2"
+                        >
+                            Perfil de Risco
+                        </label>
                         <select
+                            id="strategy-filter-risk"
                             value={filters.riskProfile}
                             onChange={(e) => onFilterChange('riskProfile', e.target.value)}
                             className="w-full px-3 py-2 rounded-lg border border-border bg-background/80 focus:outline-none focus:ring-2 focus:ring-primary/70"
@@ -143,8 +173,14 @@ export function StrategiesFilters({
 
                     {/* Perfil de Retorno */}
                     <div>
-                        <label className="block text-sm font-medium mb-2">Perfil de Retorno</label>
+                        <label
+                            htmlFor="strategy-filter-reward"
+                            className="block text-sm font-medium mb-2"
+                        >
+                            Perfil de Retorno
+                        </label>
                         <select
+                            id="strategy-filter-reward"
                             value={filters.rewardProfile}
                             onChange={(e) => onFilterChange('rewardProfile', e.target.value)}
                             className="w-full px-3 py-2 rounded-lg border border-border bg-background/80 focus:outline-none focus:ring-2 focus:ring-primary/70"
@@ -157,8 +193,14 @@ export function StrategiesFilters({
 
                     {/* Tipo de Estratégia */}
                     <div>
-                        <label className="block text-sm font-medium mb-2">Tipo de Estratégia</label>
+                        <label
+                            htmlFor="strategy-filter-type"
+                            className="block text-sm font-medium mb-2"
+                        >
+                            Tipo de Estratégia
+                        </label>
                         <select
+                            id="strategy-filter-type"
                             value={filters.strategyType}
                             onChange={(e) => onFilterChange('strategyType', e.target.value)}
                             className="w-full px-3 py-2 rounded-lg border border-border bg-background/80 focus:outline-none focus:ring-2 focus:ring-primary/70"
