@@ -13,15 +13,15 @@ import {
 
 interface StrategyCardProps {
     strategy: {
-        id: string | number;
-        name: string;
-        summary?: string;
-        proficiencyLevel?: string | null;
-        marketOutlook?: string | null;
-        volatilityView?: string | null;
-        riskProfile?: string | null;
-        rewardProfile?: string | null;
-        strategyType?: string | null;
+        readonly id: string | number;
+        readonly name: string;
+        readonly summary?: string;
+        readonly proficiencyLevel?: string | null;
+        readonly marketOutlook?: string | null;
+        readonly volatilityView?: string | null;
+        readonly riskProfile?: string | null;
+        readonly rewardProfile?: string | null;
+        readonly strategyType?: string | null;
     };
 }
 
