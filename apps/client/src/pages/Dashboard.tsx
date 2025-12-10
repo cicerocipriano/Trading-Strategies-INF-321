@@ -205,7 +205,11 @@ function Dashboard() {
                                         </p>
                                     </div>
 
-                                    {sim.returnPercentage !== null ? (
+                                    {sim.returnPercentage === null ? (
+                                        <p className="text-xs text-muted-foreground">
+                                            sem resultado
+                                        </p>
+                                    ) : (
                                         <p
                                             className={`text-sm font-semibold ${sim.returnPercentage >= 0
                                                     ? 'text-emerald-500'
@@ -214,10 +218,6 @@ function Dashboard() {
                                         >
                                             {sim.returnPercentage > 0 ? '+' : ''}
                                             {sim.returnPercentage.toFixed(1)}%
-                                        </p>
-                                    ) : (
-                                        <p className="text-xs text-muted-foreground">
-                                            sem resultado
                                         </p>
                                     )}
                                 </div>
