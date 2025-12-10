@@ -1,12 +1,12 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface StrategiesPaginationProps {
-    currentPage: number;
-    totalPages: number;
-    showingFrom: number;
-    showingTo: number;
-    totalStrategies: number;
-    onPageChange: (page: number) => void;
+    readonly currentPage: number;
+    readonly totalPages: number;
+    readonly showingFrom: number;
+    readonly showingTo: number;
+    readonly totalStrategies: number;
+    readonly onPageChange: (page: number) => void;
 }
 
 export function StrategiesPagination({
