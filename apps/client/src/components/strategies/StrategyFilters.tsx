@@ -7,13 +7,13 @@ import {
 import type { FilterState } from '@/components/strategies/constants';
 
 interface StrategiesFiltersProps {
-    filters: FilterState;
-    onFilterChange: (key: keyof FilterState, value: string) => void;
-    searchTerm: string;
-    onSearchChange: (value: string) => void;
-    showAdvancedFilters: boolean;
-    onToggleAdvancedFilters: () => void;
-    totalStrategies: number;
+    readonly filters: FilterState;
+    readonly onFilterChange: (key: keyof FilterState, value: string) => void;
+    readonly searchTerm: string;
+    readonly onSearchChange: (value: string) => void;
+    readonly showAdvancedFilters: boolean;
+    readonly onToggleAdvancedFilters: () => void;
+    readonly totalStrategies: number;
 }
 
 export function StrategiesFilters({
