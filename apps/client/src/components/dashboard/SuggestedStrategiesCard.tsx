@@ -29,12 +29,15 @@ export function SuggestedStrategiesCard({
         riskLabel = 'moderado';
     }
 
-    const riskChipLabel = (risk: (typeof userRiskProfile)) =>
-        risk === 'LOW'
-            ? 'Risco baixo'
-            : risk === 'MEDIUM'
-                ? 'Risco moderado'
-                : 'Risco alto';
+    const riskChipLabel = (risk: (typeof userRiskProfile)) => {
+        let label = 'Risco alto';
+        if (risk === 'LOW') {
+            label = 'Risco baixo';
+        } else if (risk === 'MEDIUM') {
+            label = 'Risco moderado';
+        }
+        return label;
+    };
 
     return (
         <div className="ts-glass-surface ts-glass-hover-lift rounded-xl p-5 space-y-4">
