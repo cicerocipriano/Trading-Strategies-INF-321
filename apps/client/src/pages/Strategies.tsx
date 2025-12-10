@@ -101,6 +101,53 @@ export default function Strategies() {
     const showingFrom = totalStrategies === 0 ? 0 : startIndex + 1;
     const showingTo = totalStrategies === 0 ? 0 : Math.min(endIndex, totalStrategies);
 
+    let strategiesContent = null;
+    if (loading) {
+        strategiesContent = (
+            <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+                    <p className="text-muted-foreground">Carregando estratégias...</p>
+                </div>
+            </div>
+        );
+    } else if (error) {
+        strategiesContent = (
+            <div className="bg-destructive/10 border border-destructive rounded-lg p-4 text-destructive">
+                Erro ao carregar estratégias: {error}
+            </div>
+        );
+    } else if (totalStrategies === 0) {
+        strategiesContent = (
+            <div className="text-center py-12">
+                <p className="text-muted-foreground">
+                    Nenhuma estratégia encontrada com os filtros selecionados
+                </p>
+            </div>
+        );
+    } else {
+        strategiesContent = (
+            <>
+                {/* Cards */}
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {paginatedStrategies.map((strategy) => (
+                        <StrategyCard key={strategy.id} strategy={strategy} />
+                    ))}
+                </div>
+
+                {/* Paginação */}
+                <StrategiesPagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    showingFrom={showingFrom}
+                    showingTo={showingTo}
+                    totalStrategies={totalStrategies}
+                    onPageChange={setCurrentPage}
+                />
+            </>
+        );
+    }
+
     return (
         <div className="space-y-8">
             {/* Header */}
@@ -125,45 +172,7 @@ export default function Strategies() {
             />
 
             {/* Lista de estratégias */}
-            <div>
-                {loading ? (
-                    <div className="flex items-center justify-center py-12">
-                        <div className="text-center">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
-                            <p className="text-muted-foreground">Carregando estratégias...</p>
-                        </div>
-                    </div>
-                ) : error ? (
-                    <div className="bg-destructive/10 border border-destructive rounded-lg p-4 text-destructive">
-                        Erro ao carregar estratégias: {error}
-                    </div>
-                ) : totalStrategies === 0 ? (
-                    <div className="text-center py-12">
-                        <p className="text-muted-foreground">
-                            Nenhuma estratégia encontrada com os filtros selecionados
-                        </p>
-                    </div>
-                ) : (
-                    <>
-                        {/* Cards */}
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {paginatedStrategies.map((strategy) => (
-                                <StrategyCard key={strategy.id} strategy={strategy} />
-                            ))}
-                        </div>
-
-                        {/* Paginação */}
-                        <StrategiesPagination
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            showingFrom={showingFrom}
-                            showingTo={showingTo}
-                            totalStrategies={totalStrategies}
-                            onPageChange={setCurrentPage}
-                        />
-                    </>
-                )}
-            </div>
+            <div>{strategiesContent}</div>
         </div>
     );
 }
