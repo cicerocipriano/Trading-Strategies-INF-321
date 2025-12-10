@@ -297,8 +297,8 @@ export default function Profile() {
 }
 
 interface ProfileFieldProps {
-    label: string;
-    value: string;
+    readonly label: string;
+    readonly value: string;
 }
 
 function ProfileField({ label, value }: ProfileFieldProps) {
