@@ -268,11 +268,11 @@ function Simulations() {
 export default Simulations;
 
 interface MetricCardProps {
-    label: string;
-    value: string;
-    icon: React.ReactNode;
-    helper?: string;
-    valueClassName?: string;
+    readonly label: string;
+    readonly value: string;
+    readonly icon: React.ReactNode;
+    readonly helper?: string;
+    readonly valueClassName?: string;
 }
 
 function MetricCard({
