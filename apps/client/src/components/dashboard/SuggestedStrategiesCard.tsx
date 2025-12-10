@@ -8,9 +8,9 @@ import {
 } from '@/utils/strategyRecommender';
 
 interface SuggestedStrategiesCardProps {
-    experienceLevel: ExperienceLevel;
-    winRate: string | undefined;
-    avgReturn: string | undefined;
+    readonly experienceLevel: ExperienceLevel;
+    readonly winRate: string | undefined;
+    readonly avgReturn: string | undefined;
 }
 
 export function SuggestedStrategiesCard({
