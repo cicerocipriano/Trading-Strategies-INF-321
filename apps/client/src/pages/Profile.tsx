@@ -119,7 +119,7 @@ export default function Profile() {
                             Nível: {experienceLabel}
                         </span>
                         <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-muted/50 text-muted-foreground">
-                            Membro desde&nbsp;
+                            Membro desde{' '}
                             <span className="text-foreground font-semibold">
                                 {memberSince}
                             </span>
