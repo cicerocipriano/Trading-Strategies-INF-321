@@ -99,7 +99,7 @@ function Simulations() {
     const handleDeleteSimulation = async (
         simulation: SimulationListItem,
     ) => {
-        const confirmed = window.confirm(
+        const confirmed = globalThis.confirm(
             `Tem certeza que deseja excluir a simulação "${simulation.simulationName}"? Essa ação não pode ser desfeita.`,
         );
 
