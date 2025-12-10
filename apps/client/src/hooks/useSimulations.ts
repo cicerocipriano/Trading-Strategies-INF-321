@@ -19,6 +19,8 @@ export interface SimulationListItem {
     maxDrawdown?: number | null;
 }
 
+type StringOrNumberNullable = string | number | null;
+
 interface SimulationApiDTO {
     id: string;
     simulationName?: string | null;
@@ -28,10 +30,10 @@ interface SimulationApiDTO {
     startDate?: string | null;
     endDate?: string | null;
     createdAt: string;
-    initialCapital?: string | number | null;
-    totalReturn?: string | number | null;
-    returnPercentage?: string | number | null;
-    maxDrawdown?: string | number | null;
+    initialCapital?: StringOrNumberNullable;
+    totalReturn?: StringOrNumberNullable;
+    returnPercentage?: StringOrNumberNullable;
+    maxDrawdown?: StringOrNumberNullable;
 }
 
 type AuthUserWithId = {
@@ -41,7 +43,7 @@ type AuthUserWithId = {
 /**
  * Converte string/number nullable em number ou null
  */
-function parseNumberField(value: string | number | null | undefined): number | null {
+function parseNumberField(value: StringOrNumberNullable | undefined): number | null {
     if (value === null || value === undefined) return null;
     if (typeof value === 'number') return Number.isNaN(value) ? null : value;
 
