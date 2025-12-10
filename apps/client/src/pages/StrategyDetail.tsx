@@ -155,9 +155,9 @@ export default function StrategyDetail() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {legs.map((leg, index) => (
+                                {legs.map((leg) => (
                                     <tr
-                                        key={index}
+                                        key={`${leg.orderSequence ?? 'seq'}-${leg.action ?? 'action'}-${leg.instrumentType ?? 'instrument'}-${leg.quantityRatio ?? 'qty'}-${leg.strikeRelation ?? 'strike'}`}
                                         className="border-b border-border/40 last:border-0 hover:bg-muted/30 transition-colors"
                                     >
                                         <Td>{leg.action}</Td>
@@ -165,8 +165,7 @@ export default function StrategyDetail() {
                                         <Td>{leg.quantityRatio}</Td>
                                         <Td>{leg.strikeRelation}</Td>
                                         <Td>
-                                            {leg.orderSequence ??
-                                                index + 1}
+                                            {leg.orderSequence}
                                         </Td>
                                     </tr>
                                 ))}
