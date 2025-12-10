@@ -232,7 +232,11 @@ export class SimulationsService {
                         endDate,
                     );
 
-                if (underlyingPriceAtStart !== null) {
+                if (underlyingPriceAtStart === null) {
+                    this.logger.warn(
+                        `[SimulationsService] Não foi possível obter preço inicial para ${inserted.assetSymbol}. Nenhuma SimulationLeg gerada.`,
+                    );
+                } else {
                     const legInserts: InsertSimulationLeg[] =
                         this.strategyLegFactory.instantiateLegs({
                             templates: strategyLegTemplates,
@@ -254,10 +258,6 @@ export class SimulationsService {
                             .values(legInserts)
                             .returning();
                     }
-                } else {
-                    this.logger.warn(
-                        `[SimulationsService] Não foi possível obter preço inicial para ${inserted.assetSymbol}. Nenhuma SimulationLeg gerada.`,
-                    );
                 }
             }
 
