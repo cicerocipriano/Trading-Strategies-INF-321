@@ -25,7 +25,7 @@ export class StrategyLegFactory {
 
         return templates.map((tpl): InsertSimulationLeg => {
             const isOption = tpl.instrumentType === 'CALL' || tpl.instrumentType === 'PUT';
-            const premiumPct = isOption ? 0.1 : 1.0;
+            const premiumPct = isOption ? 0.1 : 1;
             const entryPriceNumber =  underlyingPriceAtStart * premiumPct;
             const quantity = tpl.quantityRatio ?? 1;
             const strikeNumber = isOption
