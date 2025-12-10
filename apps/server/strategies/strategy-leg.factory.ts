@@ -44,9 +44,9 @@ export class StrategyLegFactory {
                 entryPrice: entryPriceNumber.toFixed(2),
                 entryDate: simulation.startDate,
                 strikePrice:
-                    strikeNumber !== null
-                        ? strikeNumber.toFixed(2)
-                        : null,
+                    strikeNumber === null
+                        ? null
+                        : strikeNumber.toFixed(2),
                 expiryDate: isOption ? simulation.endDate : null,
                 exitPrice: null,
                 exitDate: null,
