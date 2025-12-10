@@ -310,9 +310,9 @@ function MetricCard({
 }
 
 interface SimulationRowProps {
-    simulation: SimulationListItem;
-    onDelete: () => void;
-    isDeleting: boolean;
+    readonly simulation: SimulationListItem;
+    readonly onDelete: () => void;
+    readonly isDeleting: boolean;
 }
 
 function SimulationRow({
