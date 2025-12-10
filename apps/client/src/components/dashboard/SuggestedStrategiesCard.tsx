@@ -22,12 +22,12 @@ export function SuggestedStrategiesCard({
     const userRiskProfile = inferUserRiskProfile(winRate, avgReturn);
     const suggestedStrategies = getSuggestedStrategies(experienceLevel, userRiskProfile);
 
-    const riskLabel =
-        userRiskProfile === 'LOW'
-            ? 'conservador'
-            : userRiskProfile === 'MEDIUM'
-                ? 'moderado'
-                : 'agressivo';
+    let riskLabel = 'agressivo';
+    if (userRiskProfile === 'LOW') {
+        riskLabel = 'conservador';
+    } else if (userRiskProfile === 'MEDIUM') {
+        riskLabel = 'moderado';
+    }
 
     const riskChipLabel = (risk: (typeof userRiskProfile)) =>
         risk === 'LOW'
